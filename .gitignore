@@ -7,6 +7,9 @@
 *.exe
 *.o
 *.so
+*.out
+# input output testing
+*.txt
 
 # Packages #
 ############
