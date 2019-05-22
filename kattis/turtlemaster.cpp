@@ -68,7 +68,7 @@ struct tile{
     
 };
 
-bool forward_valid(turtle &turt){
+bool bounds_check(turtle &turt){
   switch (turt.dir){
   case turtle::N:
     return turt.y != 7;
@@ -83,7 +83,7 @@ bool forward_valid(turtle &turt){
 }
 
 bool handle_ice(turtle &turt, vector<vector<tile>> &board){
-  if (!forward_valid(turt)){
+  if (!bounds_check(turt)){
     return false;
   }
   bool out;
@@ -108,25 +108,20 @@ bool handle_ice(turtle &turt, vector<vector<tile>> &board){
   return out;  
 }
 bool handle_forward(turtle &turt, vector<vector<tile>> board){
-  bool out = forward_valid(turt);
-  DEBUG printf("turt N %d\n", int(turt.dir == turtle::N));
-  DEBUG printf("forward valid %d\n", int(out));
+  bool out = bounds_check(turt);
+  DEBUG printf("bounds check %d\n", int(out));
   if (!out) return out;
   switch (turt.dir){
   case turtle::N:
-    DEBUG printf("N");
     turt.y++;
     break;
   case turtle::S:
-    DEBUG printf("S");    
     turt.y--;
     break;
   case turtle::E:
-    DEBUG printf("E");        
     turt.x++;
     break;
   case turtle::W:
-    DEBUG printf("W");        
     turt.x--;
     break;
   default:
