@@ -1,5 +1,5 @@
 #define DEBUG if(false)
-#define HELPING if(true)
+#define HELPING if(false)
 #include <iostream>
 #include <vector>
 
