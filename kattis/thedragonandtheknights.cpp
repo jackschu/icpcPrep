@@ -1,4 +1,5 @@
 #define DEBUG if(false)
+#define HELPING if(true)
 #include <iostream>
 #include <vector>
 
@@ -49,7 +50,7 @@ int num_non_parallel_pairs(vector<line> lines){
   return out;
 };
 
-//reuturns true if all regions are protected
+//returns true if all regions are protected
 bool handleCase(vector<line> lines, vector<point> points){
   
   int n = lines.size();
@@ -58,6 +59,7 @@ bool handleCase(vector<line> lines, vector<point> points){
   int regions = p + n + 1;
   vector<vector<point> > point_groups;
   DEBUG printf("num regions %d\n", regions);
+  HELPING printf("%d\n", regions);  
   point_groups.push_back(points);
   if (m < regions)
     return false;
@@ -67,7 +69,7 @@ bool handleCase(vector<line> lines, vector<point> points){
       vector<point> low_group;
       vector<point> high_group;      
       const vector<point> &cur_group = point_groups[i];
-      // for each point group form tenative new groups
+      // for each point group form tentative new groups
       for(int j = 0; j < cur_group.size();j++){
 	point cur_point = cur_group[j];
 	if (cur_point.above_line(elem)){
