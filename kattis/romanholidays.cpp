@@ -1,28 +1,25 @@
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 using namespace std;
-string int_to_roman(int x);
-int get_pos(int x, vector<string> &copy_rs, unordered_map<string, int> &mem){
+
+int get_pos(int x, vector<string> &copy_rs, unordered_map<string, int> &mem) {
   int rest = x % 1000;
   int ms = x / 1000;
-  int off = rest == 0 ? 0 : mem[copy_rs[rest-1]];
+  int off = rest == 0 ? 0 : mem[copy_rs[rest - 1]];
   int out;
-  if(off < 0) {
-    out =off - ms*54;
+  if (off < 0) {
+    out = off - ms * 54;
   } else {
-    out = off + ms*946;
+    out = off + ms * 946;
   }
   return out;
 }
 
-
 string int_to_roman(int x) {
-
-
   vector<pair<int, string>> base = {
       pair<int, string>(900, "cm"),  pair<int, string>(800, "dccc"),
       pair<int, string>(700, "dcc"), pair<int, string>(600, "dc"),
@@ -40,8 +37,8 @@ string int_to_roman(int x) {
       pair<int, string>(1, "i")};
 
   string s = "";
-  while( x >= 1000){
-    s +="m";
+  while (x >= 1000) {
+    s += "m";
     x -= 1000;
   }
   for (int i = 0; i < base.size(); i++) {
@@ -56,29 +53,30 @@ string int_to_roman(int x) {
 }
 
 int main() {
-  unordered_map<string,int> mem;
+  unordered_map<string, int> mem;
   vector<string> rs;
   vector<string> copy_rs;
 
   rs.reserve(1000);
   copy_rs.reserve(1000);
-  for(int i = 1; i < 1001; i++){
+  for (int i = 1; i < 1001; i++) {
     rs.push_back(int_to_roman(i));
   }
   copy(rs.begin(), rs.end(), copy_rs.begin());
   sort(rs.begin(), rs.end());
-  for(int i = 1; i < 1001; i++){
-    if(i <= 946){
-      mem[rs[i-1]] = i;
+  for (int i = 1; i < 1001; i++) {
+    if (i <= 946) { // 946 is the point where m occurs
+      mem[rs[i - 1]] = i;
     } else {
-      mem[rs[i-1]] = i- 1001;
+      mem[rs[i - 1]] = i - 1001;
     }
   }
   int n;
-  cin  >> n;
-  for(int i =0 ; i < n; i++){
+  cin >> n;
+  for (int i = 0; i < n; i++) {
     int x;
-    cin>>x;
-    cout << get_pos(x, copy_rs, mem) << endl;;
+    cin >> x;
+    cout << get_pos(x, copy_rs, mem) << endl;
+    ;
   }
 }
