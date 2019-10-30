@@ -59,10 +59,10 @@ int main() {
     b--;
     for (int j = 0; j < n_set; j++) {
 
-      DEBUG printf("%d %d %d %d\n", j, a, b, j|cmask);
+      DEBUG printf("%d %d %d %d\n", j, a, b, j | cmask);
 
-      adj[j][a].push_back(iii(c, ii(j | cmask,b)));
-      adj[j][b].push_back(iii(c, ii(j | cmask,a)));
+      adj[j][a].push_back(iii(c, ii(j | cmask, b)));
+      adj[j][b].push_back(iii(c, ii(j | cmask, a)));
     }
   }
   DEBUG cout << "inited " << endl;
