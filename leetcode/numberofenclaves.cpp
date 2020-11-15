@@ -74,10 +74,7 @@ int numEnclaves(vector<vector<int>> &board) {
   }
   int out = 0;
   for (int i = 1; i < h - 1; i++)
-    for (int j = 1; j < w - 1; j++) {
-      if (!board[i][j])
-        continue;
-      out++;
-    }
+    for (int j = 1; j < w - 1; j++)
+      out += board[i][j];
   return out;
 }
