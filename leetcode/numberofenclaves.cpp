@@ -35,13 +35,6 @@ int main() {
   cout << numEnclaves(ans3) << endl;
 }
 
-bool **makebool(int n, int k) {
-  bool **a = new bool *[n];
-  for (int i = 0; i < n; ++i)
-    a[i] = new bool[k]();
-  return a;
-}
-
 int numEnclaves(vector<vector<int>> &board) {
   int dy[] = {0, 0, 1, -1};
   int dx[] = {1, -1, 0, 0};
@@ -49,21 +42,20 @@ int numEnclaves(vector<vector<int>> &board) {
   int h = board.size();
   int w = board[0].size();
 
-  auto visited = makebool(h, w);
   queue<ii> visit;
 
   for (int i : {0, h - 1})
     for (int j = 0; j < w; j++)
-      if (!visited[i][j] && board[i][j]) {
+      if (board[i][j]) {
         visit.push(ii(i, j));
-        visited[i][j] = true;
+        board[i][j] = 0;
       }
 
   for (int j : {0, w - 1})
     for (int i = 0; i < h; i++)
-      if (!visited[i][j] && board[i][j]) {
+      if (board[i][j]) {
         visit.push(ii(i, j));
-        visited[i][j] = true;
+        board[i][j] = 0;
       }
 
   while (!visit.empty()) {
@@ -74,16 +66,16 @@ int numEnclaves(vector<vector<int>> &board) {
       int nc = u.second + dx[d];
       if (nr < 0 || nc < 0 || nr >= h || nc >= w)
         continue;
-      if (!board[nr][nc] || visited[nr][nc])
+      if (!board[nr][nc])
         continue;
-      visited[nr][nc] = true;
+      board[nr][nc] = 0;
       visit.push(ii(nr, nc));
     }
   }
   int out = 0;
   for (int i = 1; i < h - 1; i++)
     for (int j = 1; j < w - 1; j++) {
-      if (!board[i][j] || visited[i][j])
+      if (!board[i][j])
         continue;
       out++;
     }
