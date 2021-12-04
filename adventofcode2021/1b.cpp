@@ -25,19 +25,18 @@ typedef vector<ii> vii;
 typedef vector<int> vi;
 typedef long long ll;
 
-
 int main() {
   bool first = true;
   vi vals;
   int x;
   while (cin >> x)
-	vals.push_back(x);
-  int out=0;
-  for(int i = 3; i < vals.size(); i++){
-	int prev = vals[i-3] + vals[i-2] + vals[i-1];
-	int cur = vals[i-2] + vals[i-1] + vals[i];
-	if (cur > prev) out++;
+    vals.push_back(x);
+  int out = 0;
+  for (int i = 3; i < vals.size(); i++) {
+    int prev = vals[i - 3] + vals[i - 2] + vals[i - 1];
+    int cur = vals[i - 2] + vals[i - 1] + vals[i];
+    if (cur > prev)
+      out++;
   }
-  cout<< out<<endl;
-
+  cout << out << endl;
 }

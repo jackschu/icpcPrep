@@ -25,15 +25,17 @@ typedef vector<ii> vii;
 typedef vector<int> vi;
 typedef long long ll;
 
-
 int main() {
   string dir;
   int val;
-  int vert = 0, horiz = 0; 
-  while (cin >> dir >> val){
-	if (dir == "forward") horiz += val;
-	if (dir == "down") vert += val;
-	if (dir == "up") vert -= val;
+  int vert = 0, horiz = 0;
+  while (cin >> dir >> val) {
+    if (dir == "forward")
+      horiz += val;
+    if (dir == "down")
+      vert += val;
+    if (dir == "up")
+      vert -= val;
   }
-  cout << horiz*vert << endl;
+  cout << horiz * vert << endl;
 }

@@ -25,25 +25,23 @@ typedef vector<ii> vii;
 typedef vector<int> vi;
 typedef long long ll;
 
-
 int main() {
   bool first = true;
-  cout<< "startin"<<endl;
+  cout << "startin" << endl;
   int prev, cur;
   int out;
-  while (cin >> cur){
-	if (first){
-	  prev= cur;
-	  	first = false;
-		continue;
-	}
-	if(prev < cur){
-	  printf("%d %d\n", prev, cur);
-	  out++;
-	}
+  while (cin >> cur) {
+    if (first) {
+      prev = cur;
+      first = false;
+      continue;
+    }
+    if (prev < cur) {
+      printf("%d %d\n", prev, cur);
+      out++;
+    }
 
-	  prev= cur;
+    prev = cur;
   }
-  cout<< out<<endl;
-
+  cout << out << endl;
 }
