@@ -97,7 +97,7 @@ int main() {
   DEBUG cout << boards[0].items.size() << endl;
   int win_score = -1;
   for (auto num : nums) {
-	DEBUG cout << num << endl;
+    DEBUG cout << num << endl;
     if (win_score != -1)
       break;
 

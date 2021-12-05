@@ -98,9 +98,10 @@ int main() {
   DEBUG cout << boards[0].items.size() << endl;
   int win_score = -1;
   for (auto num : nums) {
-	DEBUG cout << num << endl;
+    DEBUG cout << num << endl;
     for (auto &board : boards) {
-	  if (board.won) continue;
+      if (board.won)
+        continue;
       auto iter = board.items.find(num);
       if (iter == board.items.end())
         continue;
@@ -110,7 +111,7 @@ int main() {
 
       if (checkWin(board)) {
         win_score = calcScore(board, num);
-		board.won = true;
+        board.won = true;
         DEBUG printf("won! with score %d\n", win_score);
       }
     }
