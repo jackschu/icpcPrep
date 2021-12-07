@@ -46,7 +46,7 @@ int main() {
   sort(positions.begin(), positions.end());
   ll min_cost = -1;
   double sum = 0;
-  for (int i = positions[0]; i < positions[positions.size() - 1]; i++) {
+  for (int i = positions[0]; i <= positions[positions.size() - 1]; i++) {
     ll cur_cost = calcCost(positions, i);
     if (min_cost == -1)
       min_cost = cur_cost;
