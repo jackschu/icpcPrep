@@ -25,25 +25,25 @@ typedef vector<ii> vii;
 typedef vector<int> vi;
 typedef long long ll;
 
-
 int main() {
-  deque<ll> fish(9,0);
+  deque<ll> fish(9, 0);
   string l;
   getline(cin, l);
   stringstream ss(l);
   string item;
   while (getline(ss, item, ','))
-	fish[stoi(item)]++;
+    fish[stoi(item)]++;
 
   int days = 256;
-  for(int i = 0; i < days; i++){
-	ll spawning = fish.front();
-	fish.pop_front();
-	fish.push_back(spawning);
-	fish[6] += spawning;
+  for (int i = 0; i < days; i++) {
+    ll spawning = fish.front();
+    fish.pop_front();
+    fish.push_back(spawning);
+    fish[6] += spawning;
   }
 
   ll out = 0;
-  for(auto elem : fish) out += elem;
+  for (auto elem : fish)
+    out += elem;
   cout << out << endl;
 }
