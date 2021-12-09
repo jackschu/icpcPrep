@@ -52,8 +52,11 @@ set<char> toSet(string &s) {
 
 /**
  * constructs a mapping printable via printTranslation using the following
- * schema the number 1 uses 2 segments the number 7 uses 3 segments the number 4
- * uses 4 segments
+ * schema
+ *
+ * the number 1 uses 2 segments
+ * the number 7 uses 3 segments
+ * the number 4 uses 4 segments
  *
  * a -> segment that appears in 7 but not 1
  * b -> 6x occurrence
