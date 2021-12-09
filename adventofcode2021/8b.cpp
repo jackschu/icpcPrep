@@ -84,18 +84,18 @@ vi getTranslation(vector<string> &input) {
   translation[0] = a_candidates[0] - 'a';
   DEBUG printVec(occurrence);
   for (int i = 0; i < 7; i++) {
-    if (occurrence[i] == 4)
-      translation['e' - 'a'] = i;
     if (occurrence[i] == 6)
       translation['b' - 'a'] = i;
-    if (occurrence[i] == 7 && four_enc.find(i + 'a') != four_enc.end())
-      translation['d' - 'a'] = i;
-    if (occurrence[i] == 7 && four_enc.find(i + 'a') == four_enc.end())
-      translation['g' - 'a'] = i;
     if (occurrence[i] == 8 && i != translation[0])
       translation['c' - 'a'] = i;
+    if (occurrence[i] == 7 && four_enc.find(i + 'a') != four_enc.end())
+      translation['d' - 'a'] = i;
+    if (occurrence[i] == 4)
+      translation['e' - 'a'] = i;
     if (occurrence[i] == 9)
       translation['f' - 'a'] = i;
+    if (occurrence[i] == 7 && four_enc.find(i + 'a') == four_enc.end())
+      translation['g' - 'a'] = i;
   }
   DEBUG printTranslation(translation);
   vi rev_translation(7, -1);
