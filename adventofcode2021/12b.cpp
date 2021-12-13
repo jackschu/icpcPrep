@@ -46,7 +46,7 @@ int countWays(const vector<vi> &adj, const vector<bool> &is_large, int start,
   bool undo = exclude[target];
   if (!is_large[target])
     exclude[target] = true;
-  int out;
+  int out = 0;
   for (auto edge : adj[target]) {
     if (exclude[edge] && (used_double || edge == end))
       continue;
@@ -75,7 +75,7 @@ int main() {
 
     inputs.push_back(make_pair(left, right));
   }
-  sort(inputs.begin(), inputs.end());
+
   int n = node_names.size();
 
   vi row;
