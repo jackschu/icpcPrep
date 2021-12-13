@@ -38,24 +38,24 @@ vector<string> getNameMapping(map<string, int> &node_names) {
     out[elem.second] = elem.first;
   return out;
 }
-vector<string> name_mapping;
 
-vector<string> countWays(const vector<vi> &adj, const vector<bool> &is_large, int start,
-						 int target, vector<int> visits) {
+int countWays(const vector<vi> &adj, const vector<bool> &is_large, int start,
+              int end, int target, vector<bool> &exclude, bool used_double) {
   if (start == target)
-    return {name_mapping[target]};
+    return 1;
+  bool undo = exclude[target];
   if (!is_large[target])
-    visits[target]++;
-  vector<string> out;
+    exclude[target] = true;
+  int out;
   for (auto edge : adj[target]) {
-    if (visits[edge] == 2)
+    if (exclude[edge] && (used_double || edge == end))
       continue;
-	auto found = countWays(adj, is_large, start, edge, visits);
-	move(found.begin(), found.end(), std::back_inserter(out));
+    out += countWays(adj, is_large, start, end, edge, exclude,
+                     exclude[edge] || used_double);
   }
-  for(auto &elem: out)
-	elem += "," + name_mapping[target];
-
+  // optimization to allow pass by reference
+  if (!is_large[target])
+    exclude[target] = undo;
   return out;
 }
 
@@ -90,7 +90,7 @@ int main() {
     adj[right].push_back(left);
   }
 
-  name_mapping = getNameMapping(node_names);
+  auto name_mapping = getNameMapping(node_names);
   int start = 0;
   int end = 0;
   for (int i = 0; i < n; i++) {
@@ -100,10 +100,8 @@ int main() {
       end = i;
   }
   auto size_map = getIsLargeMapping(name_mapping);
-  vector<int> visits(n, 0);
-  visits[end] = 1;
-  auto out = countWays(adj, size_map, start, end, visits);
-  sort(out.begin(), out.end());
-  for(auto elem: out)cout<< elem << endl;
-  cout << out.size() << endl;
+  vector<bool> exclude(n, false);
+
+  auto out = countWays(adj, size_map, start, end, end, exclude, false);
+  cout << out << endl;
 }
