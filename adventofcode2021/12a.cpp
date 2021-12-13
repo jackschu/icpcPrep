@@ -56,7 +56,6 @@ int countWays(const vector<vi> &adj, const vector<bool> &is_large, int start,
 
 int main() {
   string l;
-  vector<int> node_data;
   map<string, int> node_names;
   vector<pair<string, string>> inputs;
   while (getline(cin, l)) {
