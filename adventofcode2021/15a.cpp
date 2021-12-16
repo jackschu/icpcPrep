@@ -51,7 +51,7 @@ int main() {
     board.push_back(row);
   }
 
-  // implemented dijkstra's in part a before realizing that 
+  // implemented dijkstra's in part a before realizing that
   // you can only move in two dirs :/
   priority_queue<pair<int, ii>> to_visit;
   to_visit.push(make_pair(0, make_pair(0, 0)));
@@ -75,7 +75,7 @@ int main() {
       if (new_dist >= dists[new_y][new_x])
         continue;
       dists[new_y][new_x] = new_dist;
-      to_visit.push(make_pair(dists[y][x], make_pair(new_y, new_x)));
+      to_visit.push(make_pair(dists[new_y][new_x], make_pair(new_y, new_x)));
     }
   }
 
