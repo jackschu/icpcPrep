@@ -25,94 +25,42 @@ typedef vector<ii> vii;
 typedef vector<int> vi;
 typedef long long ll;
 map<pair<pair<char, char>, int>, vector<long long>> memo_count;
+map<pair<char, char>, char> rules;
 
-struct Pair {
-  char first, second;
-  int iter = 0;
-  vector<Pair *> results;
+vector<long long> getOccurrences(char first, char second, int iter,
+                                 bool print_last = true) {
+  if (!print_last) {
+    auto search = make_pair(make_pair(first, second), iter);
 
-  Pair(char first, char second)
-      : first(first), second(second), iter(0), results({}) {}
-
-  void print() {
-    printf("iter %d %c,%c with size %d\n", this->iter, this->first,
-           this->second, (int)this->results.size());
+    auto found = memo_count.find(search);
+    if (found != memo_count.end()) {
+      return found->second;
+    }
   }
 
-  vector<long long> getOccurrences(bool print_last = true) {
-    if (!print_last) {
-      auto search = make_pair(make_pair(this->first, this->second), this->iter);
+  vector<long long> out(26, 0);
+  if (iter == 0) {
+    out[first - 'A']++;
+  } else {
+    auto found = rules.find(make_pair(first, second));
+    if (found != rules.end()) {
+      auto child_ct = getOccurrences(first, found->second, iter - 1, false);
+      for (int i = 0; i < 26; i++)
+        out[i] += child_ct[i];
 
-      auto found = memo_count.find(search);
-      if (found != memo_count.end()) {
-        return found->second;
-      }
-    }
-
-    vector<long long> out(26, 0);
-    if (results.size() == 0)
-      out[first - 'A']++;
-
-    for (auto child : results) {
-      auto child_ct = child->getOccurrences(false);
+      child_ct = getOccurrences(found->second, second, iter - 1, false);
       for (int i = 0; i < 26; i++)
         out[i] += child_ct[i];
     }
-
-    if (print_last)
-      out[second - 'A']++;
-
-    if (!print_last) {
-      auto search = make_pair(make_pair(this->first, this->second), this->iter);
-      memo_count.insert(make_pair(search, out));
-    }
-    return out;
   }
 
-  void printFull(bool print_last = true) {
-    if (results.size() == 0)
-      cout << first;
+  if (print_last)
+    out[second - 'A']++;
 
-    for (auto child : results) {
-      if (child == this) {
-        cout << "fail " << results[0] << " " << results[1] << " ";
-        this->print();
-        return;
-      }
-
-      child->printFull(false);
-    }
-
-    if (print_last)
-      cout << second << endl;
+  if (!print_last) {
+    auto search = make_pair(make_pair(first, second), iter);
+    memo_count.insert(make_pair(search, out));
   }
-};
-
-map<pair<pair<char, char>, int>, Pair *> memo;
-map<pair<char, char>, char> rules;
-
-Pair *tick(Pair *cur) {
-  auto search = make_pair(make_pair(cur->first, cur->second), cur->iter + 1);
-
-  auto found = memo.find(search);
-  if (found != memo.end())
-    return found->second;
-
-  auto out = new Pair(cur->first, cur->second);
-  out->iter = cur->iter + 1;
-
-  if (cur->iter == 0) {
-    auto found = rules.find(make_pair(cur->first, cur->second));
-    if (found != rules.end()) {
-      out->results.push_back(new Pair(cur->first, found->second));
-      out->results.push_back(new Pair(found->second, cur->second));
-    }
-  } else {
-    for (auto elem : cur->results)
-      out->results.push_back(tick(elem));
-  }
-  auto to_memo = make_pair(make_pair(out->first, out->second), out->iter);
-  memo.insert(make_pair(to_memo, out));
   return out;
 }
 
@@ -130,16 +78,11 @@ int main() {
   vector<long long> occurrence(26, 0);
 
   for (int i = 1; i < input.size(); i++) {
-    auto start = new Pair(input[i - 1], input[i]);
+    auto new_occurrence =
+        getOccurrences(input[i - 1], input[i], 40, i == input.size() - 1);
 
-    for (int i = 0; i < 40; i++)
-      start = tick(start);
-
-    auto new_occurrence = start->getOccurrences(i == input.size() - 1);
-
-    for (int i = 0; i < 26; i++) {
+    for (int i = 0; i < 26; i++)
       occurrence[i] += new_occurrence[i];
-    }
   }
   long long high = 0, low = 0;
   for (auto elem : occurrence) {
