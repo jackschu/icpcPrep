@@ -43,7 +43,7 @@ print(star_locs)
 valid_nums = star_locs.map((loc, ri) =>
     deltas
         .flatMap((delta, ci) => {
-            val = grid[delta[0] + loc[0]]?.at(delta[1] + loc[1])
+            val = grid[delta[0] + loc[0]]?.[delta[1] + loc[1]]
             if (val == null) return []
             if (is_digit(val)) return [[delta[0] + loc[0], delta[1] + loc[1]]]
         })

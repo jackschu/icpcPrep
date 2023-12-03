@@ -38,7 +38,7 @@ print(num_locs)
 
 valid_nums = num_locs.filter((loc) =>
     deltas.some((delta) => {
-        val = grid[delta[0] + loc[0]]?.at(delta[1] + loc[1])
+        val = grid[delta[0] + loc[0]]?.[delta[1] + loc[1]]
         if (val == null) return false
         return val != '.' && is_digit(val) === false
     })
