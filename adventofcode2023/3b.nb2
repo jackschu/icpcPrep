@@ -1,0 +1,97 @@
+notebook_version(2)
+
+input = `
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+`
+
+// input = `
+// 1*2
+// `
+
+is_digit = (val) => val <= '9' && val >= '0'
+
+input = input.trim()
+
+grid = input.split('\n').map((i) => i.split(''))
+
+deltas = [
+    [0, 1],
+    [0, -1],
+    [-1, 0],
+    [1, 0],
+    [-1, 1],
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+]
+
+star_locs = grid.flatMap((row, ri) =>
+    row.flatMap((val, ci) => (val == '*' ? [[ri, ci]] : []))
+)
+
+print(star_locs)
+
+valid_nums = star_locs.map((loc, ri) =>
+    deltas
+        .flatMap((delta, ci) => {
+            val = grid[delta[0] + loc[0]]?.at(delta[1] + loc[1])
+            if (val == null) return []
+            if (is_digit(val)) return [[delta[0] + loc[0], delta[1] + loc[1]]]
+        })
+        .filter((x) => x)
+)
+
+print(valid_nums)
+
+adjacent_nums = valid_nums.map((gear_array) => {
+    complete_nums = []
+    visited = new Set()
+    gear_array.forEach((loc) => {
+        if (visited.has(equality_hash(loc))) return
+        visited.add(equality_hash(loc))
+        idx = loc[1]
+        num = grid[loc[0]][idx]
+        idx--
+        while (idx >= 0) {
+            val = grid[loc[0]][idx]
+            if (!is_digit(val)) break
+            if (visited.has(equality_hash([loc[0], idx]))) return
+            visited.add(equality_hash([loc[0], idx]))
+            num = val + num
+
+            idx--
+        }
+        idx = loc[1] + 1
+        while (idx < grid[0].length) {
+            val = grid[loc[0]][idx]
+            if (!is_digit(val)) break
+            if (visited.has(equality_hash([loc[0], idx]))) return
+
+            visited.add(equality_hash([loc[0], idx]))
+            num = num + val
+
+            idx++
+        }
+        complete_nums.push(num)
+    })
+    return complete_nums.map((n) => Number(n))
+})
+
+print(adjacent_nums)
+
+valid_nums = adjacent_nums.filter((arr) => arr.length == 2)
+
+ratio = valid_nums.map((arr) => arr[0] * arr[1])
+
+answer = ratio.reduce((acc, cur) => acc + cur)
+
+print(answer)

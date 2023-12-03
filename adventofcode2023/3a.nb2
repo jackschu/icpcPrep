@@ -1,0 +1,86 @@
+notebook_version(2)
+
+input = `
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+`
+
+is_digit = (val) => val <= '9' && val >= '0'
+
+input = input.trim()
+
+grid = input.split('\n').map((i) => i.split(''))
+
+deltas = [
+    [0, 1],
+    [0, -1],
+    [-1, 0],
+    [1, 0],
+    [-1, 1],
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+]
+
+num_locs = grid.flatMap((row, ri) =>
+    row.flatMap((val, ci) => (is_digit(val) ? [[ri, ci]] : []))
+)
+
+print(num_locs)
+
+valid_nums = num_locs.filter((loc) =>
+    deltas.some((delta) => {
+        val = grid[delta[0] + loc[0]]?.at(delta[1] + loc[1])
+        if (val == null) return false
+        return val != '.' && is_digit(val) === false
+    })
+)
+
+print(valid_nums)
+
+visited = new Set()
+complete_nums = []
+valid_nums.forEach((loc) => {
+    if (visited.has(equality_hash(loc))) return
+    visited.add(equality_hash(loc))
+    idx = loc[1]
+    num = grid[loc[0]][idx]
+    idx--
+    while (idx >= 0) {
+        if(visited.has(equality_hash([loc[0],idx]))) break
+        visited.add(equality_hash([loc[0],idx]))
+        val = grid[loc[0]][idx]
+        if (!is_digit(val)) break
+        num = val + num
+
+        idx--
+    }
+    idx= loc[1] + 1
+    while (idx < grid[0].length) {
+        if(visited.has(equality_hash([loc[0],idx]))) break
+        visited.add(equality_hash([loc[0],idx]))
+        val = grid[loc[0]][idx]
+        if (!is_digit(val)) break
+        num = num + val
+
+        idx++
+    }
+    complete_nums.push(num)
+})
+
+print(complete_nums)
+
+complete_nums = complete_nums.map(n => Number(n))
+
+answer = complete_nums.reduce((acc,cur) => acc+cur)
+
+
+print(answer)
