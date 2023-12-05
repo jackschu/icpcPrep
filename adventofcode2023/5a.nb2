@@ -1,0 +1,88 @@
+notebook_version(2)
+
+
+input = `
+    seeds: 79 14 55 13
+
+    seed-to-soil map:
+    50 98 2
+    52 50 48
+
+    soil-to-fertilizer map:
+    0 15 37
+    37 52 2
+    39 0 15
+
+    fertilizer-to-water map:
+    49 53 8
+    0 11 42
+    42 0 7
+    57 7 4
+
+    water-to-light map:
+    88 18 7
+    18 25 70
+
+    light-to-temperature map:
+    45 77 23
+    81 45 19
+    68 64 13
+
+    temperature-to-humidity map:
+    0 69 1
+    1 0 69
+
+    humidity-to-location map:
+    60 56 37
+    56 93 4
+`
+
+input = input.trim()
+
+print(arr = input.split(":").slice(1))
+
+arr = arr.map( a => a.split("\n\n")[0].split("\n").map(x => x.trim()).filter(x => x!==""))
+
+print(arr)
+
+
+
+to_arr = (str) => {
+    const out = str.split(' ').filter(x => x.trim() !== "").map(Number)
+    const found = out.find(x => Number.isNaN(x))
+    if(found != null) {
+        print("bad input: ", str)
+    }
+    return out.filter(x => !Number.isNaN(x))
+}
+
+seeds = to_arr(arr[0][0])
+
+print(seeds)
+
+maps = arr.slice(1)
+
+stages = maps.map(x => x.map(to_arr))
+
+print(stages)
+
+
+ans = seeds.map((seed) => {
+    cur = seed
+    for (stage of stages) {
+        breaking = false
+        for (rule of stage) {
+            rule_offset = rule[0] - rule[1]
+            if (cur >= rule[1] && cur < rule[1] + rule[2]) {
+                cur += rule_offset
+                breaking = true
+                break
+            }
+        }
+    }
+    return cur
+})
+
+ans = Math.min(...ans)
+
+print(ans)
