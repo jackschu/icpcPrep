@@ -1,0 +1,50 @@
+notebook_version(2)
+
+input = `
+Time:      7  15   30
+Distance:  9  40  200`
+
+input = input.trim()
+
+print((arr = input.split('\n').map((i) => i.split(':').slice(1))))
+
+to_arr = (str) => {
+    const out = str
+        .replaceAll(' ', '')
+        .split(' ')
+        .filter((x) => x.trim() !== '')
+        .map(Number)
+    const found = out.find((x) => Number.isNaN(x))
+    if (found != null) {
+        print('bad input: ', str)
+    }
+    return out.filter((x) => !Number.isNaN(x))
+}
+
+inputs = arr.map((i) => to_arr(i[0]))
+
+print(inputs)
+
+durations = inputs[0]
+limits = inputs[1]
+
+get_dist = (total_s, limit) => {
+    // (total_s - hold_s) *  holds_s > limit
+    // bounds are 1/2 total_s plus or minus sqrt(total_s^2 - 4 * limit)
+    const p1 = 0.5 * total_s
+    const p2 = 0.5 * (total_s ** 2 - 4 * limit) ** 0.5
+
+    const epsilon = 0.000000001
+
+    return [Math.ceil(p1 - p2 + epsilon), Math.floor(p1 + p2 - epsilon)]
+}
+
+options = durations.map((duration, idx) => {
+    limit = limits[idx]
+    range = get_dist(duration, limit)
+    return range[1] - range[0] + 1
+})
+
+print(options)
+
+print(options.reduce((a, b) => a * b))
