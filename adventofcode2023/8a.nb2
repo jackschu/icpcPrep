@@ -1,0 +1,44 @@
+notebook_version(2)
+
+input = `
+    RL
+
+    AAA = (BBB, CCC)
+    BBB = (DDD, EEE)
+    CCC = (ZZZ, GGG)
+    DDD = (DDD, DDD)
+    EEE = (EEE, EEE)
+    GGG = (GGG, GGG)
+    ZZZ = (ZZZ, ZZZ)
+`
+
+input = input.trim()
+
+[ring, mapping] = input.split("\n\n")
+
+
+rows = new Map()
+mapping = mapping.split('\n').forEach((x) => {
+    const [k, dirs] = x.trim().split('=')
+    
+    rows.set(k.trim(), {L: dirs.slice(2,5), R: dirs.slice(7,10)}) 
+})
+
+
+currents = [...rows.keys()].filter(x => x[2] === 'A')
+print(currents)
+
+cur = "AAA"
+dest = "ZZZ"
+i = 0
+while (i < 100_000) {
+    if(cur === dest) break;
+    idx = i% ring.length
+    dir = ring[idx]
+    
+    cur = rows.get(cur)[dir]
+    i++
+}
+
+
+print(i)
