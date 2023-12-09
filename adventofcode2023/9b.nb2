@@ -1,0 +1,52 @@
+notebook_version(2)
+
+input = `
+0 3 6 9 12 15
+1 3 6 10 15 21
+10 13 16 21 30 45
+`
+
+input = input.trim()
+
+to_arr = (str) => {
+    const out = str
+        .split(' ')
+        .filter((x) => x.trim() !== '')
+        .map(Number)
+    const found = out.find((x) => Number.isNaN(x))
+    if (found != null) {
+        print('bad input: ', str)
+    }
+    return out.filter((x) => !Number.isNaN(x))
+}
+
+rows = input.split('\n').map((x) => to_arr(x.trim()))
+
+process_row = (row) => {
+    let begins = []
+    let cur = row
+    while (cur) {
+        let next = []
+        begins.push(cur.at(0))
+        if (cur.every((x) => x === 0)) break
+
+        cur.reduce((prev, cur) => {
+            next.push(cur - prev)
+            return cur
+        })
+        cur = next
+    }
+
+    begins.reverse()
+    return begins.reduce((prev, cur) => {
+        next = cur - prev
+        return next
+    })
+    return begins_sum
+}
+
+answers = rows.map(process_row)
+
+sum = answers.reduce((acc, cur) => acc + cur)
+
+print(sum)
