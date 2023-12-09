@@ -1,0 +1,100 @@
+notebook_version(2)
+
+input = `
+    LR
+
+    11A = (11B, XXX)
+    11B = (XXX, 11Z)
+    11Z = (11B, XXX)
+    22A = (22B, XXX)
+    22B = (22C, 22C)
+    22C = (22Z, 22Z)
+    22Z = (22B, 22B)
+    XXX = (XXX, XXX)
+`
+
+input = input.trim()
+
+[ring, mapping] = input.split('\n\n')
+
+rows = new Map()
+mapping = mapping.split('\n').forEach((x) => {
+    const [k, dirs] = x.trim().split('=')
+
+    rows.set(k.trim(), { L: dirs.slice(2, 5), R: dirs.slice(7, 10) })
+})
+
+get_cycle_info = (cur) => {
+    seen = new Map()
+    let i = 0
+    let exits = []
+    while (i < 100000) {
+        idx = i % ring.length
+
+        if (cur[2] === 'Z') {
+            exits.push(i)
+        }
+        cycle_start = seen.get(equality_hash([idx, cur]))
+        if (cycle_start !== undefined) {
+            break
+        }
+        seen.set(equality_hash([idx, cur]), i)
+
+        dir = ring[idx]
+
+        cur = rows.get(cur)[dir]
+        i++
+    }
+    const cycle_len = i - cycle_start
+    exits = exits.map((x) => (x) % cycle_len)
+    
+    
+
+    return { cycle_len, exits: exits, offset: cycle_start }
+}
+
+
+
+currents = [...rows.keys()].filter((x) => x[2] === 'A')
+print(currents)
+
+// LCM only works because exits === 0 for real input
+print(currents = currents.map((c) => get_cycle_info(c)))
+
+
+lcm_targs = currents.map(x => x.cycle_len)
+
+max = Math.max(...currents.map(i => i.cycle_len))
+
+seive = Array(max).fill(true)
+seive[1] = false
+seive[0] = false
+for (let i = 2; i < max; i++) {
+    if (!seive[i]) continue
+    let cur = i
+    while (cur < max) {
+        cur+= i
+        seive[cur] = false
+        // cur += i
+    }
+}
+
+
+primes = []
+for (let i = 0; i < max; i++) {
+    if(seive[i]) primes.push(i)
+}
+
+factors = primes.flatMap((p) => {
+    let cur = 1
+    let ans = undefined
+    while (lcm_targs.some((x) => x % p ** (cur) === 0)) {
+        ans = cur
+        cur++        
+    }
+    if (ans != undefined) return [p ** ans]
+    else return []
+})
+
+
+print(factors.reduce((a,b)=> a*b))
