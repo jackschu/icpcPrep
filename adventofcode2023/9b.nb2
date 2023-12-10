@@ -37,12 +37,10 @@ process_row = (row) => {
         cur = next
     }
 
-    begins.reverse()
-    return begins.reduce((prev, cur) => {
+    return begins.reduceRight((prev, cur) => {
         next = cur - prev
         return next
     })
-    return begins_sum
 }
 
 answers = rows.map(process_row)
