@@ -1,0 +1,251 @@
+notebook_version(2)
+
+char = 'L'
+
+input = `
+${char}${char}${char}
+${char}S${char}
+${char}${char}${char}
+`
+
+input = `
+.....
+.S-7.
+.|.|.
+.L-J.
+.....`
+
+print(input)
+
+input = input.trim()
+
+grid = input.split('\n').map((x) => {
+    return ['.', ...x.split(''), '.']
+})
+
+init_n = grid[0].length
+
+grid = [Array(init_n).fill('.'), ...grid, Array(init_n).fill('.')]
+print(repr(grid))
+
+n_rows = grid.length
+n_cols = grid[0].length
+
+grid_at = (coord) => grid[coord[0]]?.[coord[1]]
+
+start_loc = []
+grid.forEach((row, ri) => {
+    let ci = row.findIndex((elem) => elem === 'S')
+    if (ci !== -1) start_loc = [ri, ci]
+})
+
+print(start_loc, grid_at(start_loc))
+
+deltas = [
+    [-1, 0],
+    [1, 0],
+    [0, 1],
+    [0, -1],
+]
+
+char_deltas = new Map()
+char_deltas.set('|', [deltas[0], deltas[1]])
+char_deltas.set('-', [deltas[2], deltas[3]])
+char_deltas.set('L', [deltas[0], deltas[2]])
+char_deltas.set('J', [deltas[0], deltas[3]])
+char_deltas.set('7', [deltas[1], deltas[3]])
+char_deltas.set('F', [deltas[1], deltas[2]])
+char_deltas.set('S', deltas)
+
+inverses = new Map()
+inverses.set(equality_hash(deltas[0]), 1)
+inverses.set(equality_hash(deltas[1]), 0)
+inverses.set(equality_hash(deltas[2]), 3)
+inverses.set(equality_hash(deltas[3]), 2)
+
+deltas_eq = (hay, needle) => hay[0] === needle[0] && hay[1] === needle[1]
+
+is_next_good_pipe = (cur, next_d) => {
+    const next = [cur[0] + next_d[0], cur[1] + next_d[1]]
+    const next_elem = grid_at(next)
+    if (next_elem === undefined || next_elem === '.') return -1
+    const next_deltas = char_deltas.get(next_elem)
+
+    const inverse_idx = inverses.get(equality_hash(next_d))
+    const needle = deltas[inverse_idx]
+    const found = next_deltas.findIndex((hay) => deltas_eq(hay, needle))
+    return found
+}
+
+resolve_s = () => {
+    const cur = start_loc
+    let outs = deltas.filter((next_d) => {
+        return is_next_good_pipe(cur, next_d) !== -1
+    })
+
+    if (outs.length !== 2) throw new Error('Bad out')
+
+    for (let [k, v] of char_deltas.entries()) {
+        if (outs.every((out) => v.some((other) => deltas_eq(other, out))))
+            return k
+    }
+}
+
+resolved_s = resolve_s()
+print(resolved_s)
+
+get_exits = (cur) => {
+    let char = grid_at(cur)
+    if (char === 'S') {
+        char = resolved_s
+        return [char_deltas.get(resolved_s)[0]]
+    }
+    const ds = char_deltas.get(char)
+    return ds
+}
+
+const cur = [0, 0]
+const right = [cur[0], cur[1] + 1]
+const left = [cur[0], cur[1] - 1]
+const down = [cur[0] + 1, cur[1]]
+const up = [cur[0] - 1, cur[1]]
+neighbors = new Map()
+neighbors.set('|', { ul: [right], dr: [left] })
+neighbors.set('-', { ul: [up], dr: [down] })
+neighbors.set('L', { ul: [], dr: [down, left] })
+neighbors.set('J', { ul: [deltas[0]], dr: [deltas[3]] })
+neighbors.set('7', { ul: [deltas[1]], dr: [deltas[3]] })
+neighbors.set('F', { ul: [deltas[1]], dr: [deltas[2]] })
+
+right_starts = []
+left_starts = []
+visited = Array(n_rows)
+    .fill(0)
+    .map((x) => Array(n_cols).fill(-1))
+loop_idxs = [start_loc]
+mark_visited = (coord, depth) => (visited[coord[0]][coord[1]] = depth)
+is_visited = (coord) => visited[coord[0]][coord[1]] !== -1
+queue = []
+queue.push([start_loc, 0, null])
+mark_visited(start_loc, 0)
+while (queue.length) {
+    const [cur, depth, prev] = queue.pop()
+    const elem = grid_at(cur)
+    if (prev) {
+        const moving_up = prev[0] > cur[0]
+        const moving_left = prev[1] > cur[1]
+
+        const enter_horiz = prev[0] === cur[0]
+
+        const right = [cur[0], cur[1] + 1]
+        const left = [cur[0], cur[1] - 1]
+        const down = [cur[0] + 1, cur[1]]
+        const up = [cur[0] - 1, cur[1]]
+        // NOTE: if handling S is load bearing this won't work
+        // unlikely maybe imposible?
+        if (elem === '|') {
+            right_starts.push(moving_up ? right : left)
+            left_starts.push(moving_up ? left : right)
+        } else if (elem === '-') {
+            right_starts.push(moving_left ? up : down)
+            left_starts.push(moving_left ? down : up)
+        } else if (elem === 'L') {
+            if (enter_horiz) {
+                left_starts.push(down, left)
+            } else {
+                right_starts.push(down, left)
+            }
+        } else if (elem === 'J') {
+            if (enter_horiz) {
+                right_starts.push(down, right)
+            } else {
+                left_starts.push(down, right)
+            }
+        } else if (elem === 'F') {
+            if (enter_horiz) {
+                right_starts.push(up, left)
+            } else {
+                left_starts.push(up, left)
+            }
+        } else if (elem === '7') {
+            if (enter_horiz) {
+                left_starts.push(up, right)
+            } else {
+                right_starts.push(up, right)
+            }
+        }
+    }
+    const deltas = get_exits(cur)
+    deltas.forEach((delta) => {
+        const next = [cur[0] + delta[0], cur[1] + delta[1]]
+        const next_elem = grid_at(next)
+
+        const idx = is_next_good_pipe(cur, delta)
+        if (idx === -1) return
+        if (is_visited(next)) return
+
+        mark_visited(next, depth + 1)
+        loop_idxs.push(next)
+        queue.push([next, depth + 1, cur])
+    })
+}
+
+loop_set = new Set()
+visited.forEach((row, ri) => {
+    row.forEach((elem, ci) => {
+        if (elem !== -1) {
+            // print(ri,ci)
+            loop_set.add(equality_hash([ri, ci]))
+        }
+    })
+})
+
+seen = new Set()
+right_starts = right_starts.filter((idx) => {
+    if (loop_set.has(equality_hash(idx))) return false
+    if (seen.has(equality_hash(idx))) return false
+    seen.add(equality_hash(idx))
+    return true
+})
+left_starts = left_starts.filter((idx) => {
+    if (loop_set.has(equality_hash(idx))) return false
+    if (seen.has(equality_hash(idx))) return false
+    seen.add(equality_hash(idx))
+    return true
+})
+
+bfs = (starts) => {
+    let visited = Array(n_rows)
+        .fill(0)
+        .map((x) => Array(n_cols).fill(-1))
+    let mark_visited = (coord, depth) => (visited[coord[0]][coord[1]] = depth)
+    let is_visited = (coord) => visited[coord[0]][coord[1]] !== -1
+    let queue = []
+    starts.forEach((start_loc) => {
+        queue.push([start_loc, 0])
+        mark_visited(start_loc, 0)
+    })
+    while (queue.length) {
+        let [cur, depth] = queue.shift()
+        // print("cur",  cur)
+        deltas.forEach((delta) => {
+            const next = [cur[0] + delta[0], cur[1] + delta[1]]
+            const next_elem = grid_at(next)
+            // print(cur, delta, next, next_elem)
+            if (
+                next_elem === undefined ||
+                loop_set.has(equality_hash(next)) ||
+                is_visited(next)
+            )
+                return
+
+            mark_visited(next, depth + 1)
+            queue.push([next, depth + 1, cur])
+        })
+    }
+    return visited.flatMap((x) => x).filter((x) => x !== -1).length
+}
+
+
+print((a = bfs(left_starts)))
+print((b = bfs(right_starts)))
