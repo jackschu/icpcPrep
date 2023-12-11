@@ -1,0 +1,139 @@
+notebook_version(2)
+
+
+char = 'L'
+
+input = `
+${char}${char}${char}
+${char}S${char}
+${char}${char}${char}
+`
+
+input = `
+..F7.
+.FJ|.
+SJ.L7
+|F--J
+LJ...
+`
+
+print(input)
+
+input = input.trim()
+
+grid = input.split('\n').map((x) => {
+    return x.split('')
+})
+
+print(repr(grid))
+
+n_rows = grid.length
+n_cols = grid[0].length
+
+grid_at = (coord) => grid[coord[0]]?.[coord[1]]
+
+start_loc = []
+grid.forEach((row, ri) => {
+    let ci = row.findIndex((elem) => elem === 'S')
+    if (ci !== -1) start_loc = [ri, ci]
+})
+
+print(start_loc, grid_at(start_loc))
+
+deltas = [
+    [-1, 0],
+    [1, 0],
+    [0, 1],
+    [0, -1],
+]
+
+char_deltas = new Map()
+char_deltas.set('|', [deltas[0], deltas[1]])
+char_deltas.set('-', [deltas[2], deltas[3]])
+char_deltas.set('L', [deltas[0], deltas[2]])
+char_deltas.set('J', [deltas[0], deltas[3]])
+char_deltas.set('7', [deltas[1], deltas[3]])
+char_deltas.set('F', [deltas[1], deltas[2]])
+char_deltas.set('S', deltas)
+
+inverses = new Map()
+inverses.set(equality_hash(deltas[0]), 1)
+inverses.set(equality_hash(deltas[1]), 0)
+inverses.set(equality_hash(deltas[2]), 3)
+inverses.set(equality_hash(deltas[3]), 2)
+
+deltas_eq = (hay, needle) => hay[0] === needle[0] && hay[1] === needle[1]
+
+is_next_good_pipe = (cur, next_d) => {
+    const next = [cur[0] + next_d[0], cur[1] + next_d[1]]
+    const next_elem = grid_at(next)
+    if (next_elem === undefined || next_elem === '.') return -1
+    const next_deltas = char_deltas.get(next_elem)
+
+    const inverse_idx = inverses.get(equality_hash(next_d))
+    const needle = deltas[inverse_idx]
+    const found = next_deltas.findIndex((hay) => deltas_eq(hay, needle))
+    return found
+}
+
+resolve_s = () => {
+    const cur = start_loc
+    let outs = deltas.filter((next_d) => {
+        return is_next_good_pipe(cur, next_d) !== -1
+    })
+
+    if (outs.length !== 2) throw new Error('Bad out')
+
+    for (let [k, v] of char_deltas.entries()) {
+        if (outs.every((out) => v.some((other) => deltas_eq(other, out))))
+            return k
+    }
+}
+
+resolved_s = resolve_s()
+print(resolved_s)
+
+get_exits = (cur) => {
+    let char = grid_at(cur)
+    if (char === 'S') {
+        char = resolved_s
+    }
+    const ds = char_deltas.get(char)
+    return ds
+}
+
+visited = Array(n_rows)
+    .fill(0)
+    .map((x) => Array(n_cols).fill(-1))
+mark_visited = (coord, depth) => (visited[coord[0]][coord[1]] = depth)
+is_visited = (coord) => visited[coord[0]][coord[1]] !== -1
+queue = []
+queue.push([start_loc, 0, 0])
+queue.push([start_loc, 0, 1])
+mark_visited(start_loc, 0)
+while (queue.length) {
+    const [cur, depth, enter] = queue.shift()
+    // if (depth > 4) break
+    const deltas = get_exits(cur)
+    deltas.forEach((delta) => {
+        const next = [cur[0] + delta[0], cur[1] + delta[1]]
+        const next_elem = grid_at(next)
+
+        const idx = is_next_good_pipe(cur, delta)
+        if (idx === -1) return
+        if (is_visited(next)) return false
+
+        mark_visited(next, depth + 1)
+        queue.push([next, depth + 1])
+    })
+}
+
+visited.map((v) => print(v))
+grid.map((v) => print(v))
+
+dists = visited.flatMap((x) => x)
+
+max = dists.reduce((acc, cur) => (acc < cur ? cur : acc))
+
+//6649 too low
+print(max)
