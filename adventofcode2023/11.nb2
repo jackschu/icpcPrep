@@ -47,7 +47,7 @@ growth =  1_000_000
 expand = (first, second, arr) => {
     const less = first < second ? first : second 
     const more = first >= second ? first : second
-    return (arr[more] - arr[less]) * (1_000_000 -1)
+    return (arr[more] - arr[less]) * (growth -1)
 }
 
 dists = []
