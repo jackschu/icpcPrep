@@ -1,0 +1,67 @@
+notebook_version(2)
+
+input = `
+...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#.....
+`
+
+input = input.trim()
+
+grid = input.split("\n").map(x => x.split(""))
+
+
+n_rows = grid.length
+n_cols = grid[0].length
+
+empty_rows = grid.map((r) => r.every((x) => x === '.') ? 1 : 0)
+empty_cols = grid[0].map((_, col_idx) =>
+    Array(n_rows).fill(false).every((_, row_idx) => grid[row_idx][col_idx] === '.') ? 1 : 0
+)
+empty_rows.reduce((acc, cur, idx) => {
+    empty_rows[idx] = acc + empty_rows[idx] 
+    return empty_rows[idx]
+}, 0)
+empty_cols.reduce((acc, cur, idx) => {
+    empty_cols[idx] = acc + empty_cols[idx] 
+    return empty_cols[idx]
+}, 0)
+
+galaxy_locs = grid.flatMap((r, row_idx) =>
+    r.flatMap((x, col_idx) => (x === '#' ? [[row_idx, col_idx]] : []))
+)
+
+
+
+n_galaxy = galaxy_locs.length
+
+growth =  1_000_000
+
+expand = (first, second, arr) => {
+    const less = first < second ? first : second 
+    const more = first >= second ? first : second
+    return (arr[more] - arr[less]) * (1_000_000 -1)
+}
+
+dists = []
+for(let i = 0; i < n_galaxy -1; i++) {
+    for(let j = i+1; j < n_galaxy; j++) {
+        const first = galaxy_locs[i]
+        const second = galaxy_locs[j]
+        let dist = Math.abs(first[0] - second[0]) 
+        dist += Math.abs(first[1] - second[1])
+        dist += expand(first[0], second[0], empty_rows)
+        dist += expand(first[1], second[1], empty_cols)
+        dists.push(dist)
+    }
+}
+
+
+print(dists.reduce((a,b) => a+b) )
