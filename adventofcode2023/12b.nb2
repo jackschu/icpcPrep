@@ -1,0 +1,76 @@
+notebook_version(2)
+
+
+input = `
+???.### 1,1,3
+.??..??...?##. 1,1,3
+?#?#?#?#?#?#?#? 1,3,1,6
+????.#...#... 4,1,1
+????.######..#####. 1,6,5
+?###???????? 3,2,1
+`
+
+input = input.trim()
+
+rows = input.split('\n').map((row) => {
+    const [data, groups] = row.split(' ')
+    const repeated_data = Array(5).fill(data).join('?')
+    const group_nums = Array(5).fill(groups.split(',').map(Number))
+    const repeated_groups = [].concat(...group_nums)
+
+    return { data: repeated_data.split(''), groups: repeated_groups }
+})
+
+
+solve = (row) => {
+    const { data, groups } = row
+    const n_springs = row.data.length
+    const n_groups = row.groups.length
+    const fits = Array(n_springs).fill(0)
+
+    row.data.reduce(
+        (acc, cur, idx) => (fits[idx] = cur !== '.' ? acc + 1 : 0),
+        0
+    )
+
+    const memo = new Map()
+    const calc = (springs_rem, groups_rem) => {
+        let found = memo.get(equality_hash([springs_rem, groups_rem]))
+        if (found != null) return found
+
+        if (springs_rem < -1) {
+            return 0
+        }
+        if (groups_rem === 0 && springs_rem === -1) {
+            return 1
+        }
+        const group_sz = groups[groups_rem - 1]
+        let place_cts = 0
+        const no_place_cts =
+            data[springs_rem - 1] === '#'
+                ? 0
+                : calc(springs_rem - 1, groups_rem)
+        const capacity = fits[springs_rem - 1]
+        if (
+            capacity !== undefined &&
+            group_sz !== undefined &&
+            capacity >= group_sz
+        ) {
+            const new_springs_rem = springs_rem - group_sz - 1
+            if (data[new_springs_rem] !== '#')
+                place_cts = calc(new_springs_rem, groups_rem - 1, fits)
+        }
+
+        const out = place_cts + no_place_cts
+        memo.set(equality_hash([springs_rem, groups_rem]), out)
+        return out
+    }
+
+    return calc(n_springs, n_groups, fits)
+}
+
+ans = rows.map((x) => solve(x))
+
+//8137 too high
+// 8043 too high
+print(ans.reduce((a, b) => a + b))
