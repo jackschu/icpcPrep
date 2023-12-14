@@ -1,0 +1,69 @@
+notebook_version(2)
+
+input = `
+    #.##..##.
+    ..#.##.#.
+    ##......#
+    ##......#
+    ..#.##.#.
+    ..##..##.
+    #.#.##.#.
+
+    #...##..#
+    #....#..#
+    ..##..###
+    #####.##.
+    #####.##.
+    ..##..###
+    #....#..#
+`
+
+input = input.trim()
+
+probs = input
+    .split('\n\n')
+    .map((x) => x.split('\n').map((y) => y.trim().split('')))
+
+transpose = (arr) => {
+    const n_r = arr.length
+    const n_c = arr[0].length
+    let out = []
+    for (let i = 0; i < n_c; i++) {
+        let temp = []
+        for (let j = 0; j < n_r; j++) {
+            temp.push(arr[j][i])
+        }
+        out.push(temp)
+    }
+    return out
+}
+
+solve = (arr) => {
+    let hashes = arr.map(equality_hash)
+    for (let init = 0; init < hashes.length -1; init++) {
+        let every = true
+        for (let offset = 0; offset < hashes.length ; offset++) {
+            const right = init + 1 + offset
+            const left = init - offset
+            if (hashes[right] === undefined || hashes[left] === undefined)
+                continue
+            if (hashes[right] !== hashes[left]) {
+                every = false
+                break
+            }
+        }
+        if (every) return init + 1
+    }
+    return null
+}
+
+
+score = (arr) => {
+    const row_score = solve(arr)
+    if(row_score !== null) return 100*row_score
+    return solve(transpose(arr))
+}
+
+scores = probs.map(score)
+
+print(ans = scores.reduce((a,b)=>a+b))
