@@ -1,0 +1,81 @@
+notebook_version(2)
+
+input = `
+    #.##..##.
+    ..#.##.#.
+    ##......#
+    ##......#
+    ..#.##.#.
+    ..##..##.
+    #.#.##.#.
+
+    #...##..#
+    #....#..#
+    ..##..###
+    #####.##.
+    #####.##.
+    ..##..###
+    #....#..#
+`
+
+input = input.trim()
+
+probs = input
+    .split('\n\n')
+    .map((x) => x.split('\n').map((y) => y.trim().split('')))
+
+transpose = (arr) => {
+    const n_r = arr.length
+    const n_c = arr[0].length
+    let out = []
+    for (let i = 0; i < n_c; i++) {
+        let temp = []
+        for (let j = 0; j < n_r; j++) {
+            temp.push(arr[j][i])
+        }
+        out.push(temp)
+    }
+    return out
+}
+
+delta = (left, right) =>
+    left.reduce((acc, cur, idx) => (cur !== right[idx] ? acc + 1 : acc), 0)
+
+solve = (arr) => {
+    for (let init = 0; init < arr.length - 1; init++) {
+        let every = true
+        let used_off_by_one = false
+        for (let offset = 0; offset < arr.length; offset++) {
+            const right = init + 1 + offset
+            const left = init - offset
+            if (arr[right] === undefined || arr[left] === undefined) continue
+
+            const off_by = delta(arr[left], arr[right])
+
+            if (off_by === 1) {
+                if (used_off_by_one) {
+                    every = false
+                    break
+                }
+                used_off_by_one = true
+            } else if (off_by > 1) {
+                every = false
+                break
+            }
+        }
+        if (every && used_off_by_one) return init + 1
+    }
+    return null
+}
+
+score = (arr) => {
+    const row_score = solve(arr)
+    if (row_score !== null) return 100 * row_score
+    return solve(transpose(arr))
+}
+
+scores = probs.map(score)
+
+print(scores)
+
+print((ans = scores.reduce((a, b) => a + b)))
