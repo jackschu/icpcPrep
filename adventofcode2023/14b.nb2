@@ -1,0 +1,129 @@
+notebook_version(2)
+
+input = `
+O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....
+`
+
+input = input.trim()
+
+
+reduce_row = (row, is_flip) => {
+    // print(row)
+    const n = row.length
+    let runs = Array(n).fill(0)
+    const streak = (acc, cur, idx) => {
+        if (cur === '#') return 0
+        return (runs[idx] = acc + (cur == 'O' ? 1 : 0))
+    }
+    if (is_flip) row.reduce(streak, 0)
+    else row.reduceRight((a, b, c) => streak(a, b, c), 0)
+
+    const resolve = (acc, cur, idx) => {
+        if (acc === null && cur !== 0) acc = cur
+        if (cur === 0) return null
+
+        out[idx] = acc
+        if (acc > 0) acc--
+        return acc
+    }
+
+    let out = Array(n).fill(0)
+
+    if (is_flip) row.reduceRight(resolve, null)
+    else row.reduce((a, b, c) => resolve(a, b, c), null)
+    // print("out", out)
+    return out
+}
+
+reduce_row = (row, is_flip) => {
+    // print(row)
+    const n = row.length
+    let runs = Array(n).fill(0)
+    let count_streaks = (acc, cur, idx) => {
+        if (cur === '#') return 0
+        return (runs[idx] = acc + (cur == 'O' ? 1 : 0))
+    }
+    if (is_flip) row.reduce(count_streaks, 0)
+    else row.reduceRight(count_streaks, 0)
+
+    let consolidate = (acc, cur, idx) => {
+        if (acc === null && cur !== 0) acc = cur
+        if (cur === 0) return null
+
+        out[idx] = acc
+        if (acc > 0) acc--
+        return acc
+    }
+    let out = Array(n).fill(0)
+    if (is_flip) runs.reduceRight(consolidate, null)
+    else runs.reduce(consolidate, null)
+    return out
+}
+
+alter = (grid, is_vert, is_flip) => {
+    const outer_n = is_vert ? width : height
+    const inner_n = is_vert ? height : width
+    for (let outer = 0; outer < outer_n; outer++) {
+        const temp_row = []
+        for (let inner = 0; inner < inner_n; inner++) {
+            const i = inner
+            temp_row.push(is_vert ? grid[i][outer] : grid[outer][i])
+        }
+        const reduced = reduce_row(temp_row, is_flip)
+        for (let inner = 0; inner < inner_n; inner++) {
+            const i = inner
+            if ((is_vert ? grid[i][outer] : grid[outer][i]) === '#') continue
+            const new_val = reduced[i] === 0 ? '.' : 'O'
+            if (is_vert) grid[i][outer] = new_val
+            else grid[outer][i] = new_val
+        }
+    }
+}
+
+cycle = (grid) => {
+    alter(grid, true, false)
+    alter(grid, false, false)
+    alter(grid, true, true)
+    alter(grid, false, true)
+}
+
+targ = 1_000_000_000
+
+start = null
+
+seen = new Map()
+grid = input.split('\n').map((x) => x.split(''))
+width = grid[0].length
+height = grid.length
+weights = []
+grid.map((x) => print(x))
+for (i = 0; i < targ; i++) {
+    cycle(grid)
+    const hash = equality_hash(grid.map((x) => [...x]))
+    const found = seen.get(hash)
+    if (found !== undefined && start == null) {
+        const cycle_len = i - found
+        start = found
+        targ = Math.ceil(i / cycle_len) * cycle_len + (targ % cycle_len)
+    } else seen.set(hash, i)
+}
+
+out = 0
+grid.forEach((row, row_idx) => {
+    row.forEach((ele) => {
+        if (ele === 'O') {
+            out += height - row_idx
+        }
+    })
+})
+
+print(out)
