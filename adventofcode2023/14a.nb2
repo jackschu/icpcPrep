@@ -1,0 +1,59 @@
+notebook_version(2)
+
+
+input = `
+O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....
+`
+
+input = input.trim()
+
+grid = input.split("\n").map(x => x.split(""))
+
+width = grid[0].length
+height = grid.length
+
+reduce_row = (row) => {
+    const n = row.length
+    let runs = Array(n).fill(0)
+    row.reduceRight((acc, cur, idx) => {
+        if (cur === "#") return 0
+        return runs[idx] = acc + (cur ==  "O"? 1:0)
+    },0)
+    
+    let out = Array(n).fill(0)
+    runs.reduce((acc, cur, idx) => {
+        if(acc === null && cur !== 0 ) acc = cur
+        if(cur === 0) return null
+
+        out[idx] = acc
+        if(acc > 0) acc--
+        return acc
+    },null)
+    return out
+}
+
+weights = []
+for(let col = 0; col < width; col ++){
+    const temp_row = []
+    for(let i = 0 ;i < height; i++) {
+        temp_row.push(grid[i][col])
+    }
+    const reduced = reduce_row(temp_row)
+    const load = reduced.map((x, idx) => (height-idx) * !!x)
+    weights.push(load)
+}
+
+ans = weights.flatMap(x => x).reduce((a,b)=>a+b)
+
+print(ans)
+
+print(reduce_row(["#", ".", "O"]))
