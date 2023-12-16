@@ -1,0 +1,41 @@
+notebook_version(2)
+
+input = `
+rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7
+`
+
+input = input.trim()
+
+items = input.split(',')
+
+bump = (char, val) => {
+    const ascii = char.charCodeAt(0)
+    val += ascii
+    val *= 17
+    val %= 256
+    return val
+}
+
+hash_string = (str) => str.split('').reduce((acc, cur) => bump(cur, acc), 0)
+
+boxes = Array(256)
+    .fill(true)
+    .map((x) => new Map())
+ 
+items.forEach((item) => {
+    if (item.includes('-')) {
+        const label = item.split('-')[0]
+        boxes.forEach((box) => box.delete(label))
+        return
+    }
+    let [label, val] = item.split('=')
+    const box_id = hash_string(label)
+    boxes[box_id].set(label, Number(val))
+})
+
+ans = boxes.flatMap((box, box_idx) =>
+    [...box.values()]
+        .map((focal, slot_idx) => (box_idx + 1) * (slot_idx + 1) * focal)
+).reduce((a, b) => a + b, 0)
+
+print(ans)
