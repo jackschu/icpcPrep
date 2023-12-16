@@ -1,0 +1,23 @@
+notebook_version(2)
+
+input = `
+rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7
+`
+
+input = input.trim()
+
+items = input.split(',')
+
+bump = (char, val) => {
+    const ascii = char.charCodeAt(0)
+    val += ascii
+    val *= 17
+    val %= 256
+    return val
+}
+
+ans = items.map((item) => {
+    return item.split('').reduce((acc, cur) => bump(cur, acc), 0)
+})
+
+print(ans.reduce((a, b) => a + b))
