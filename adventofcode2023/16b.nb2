@@ -1,0 +1,101 @@
+notebook_version(2)
+
+input = String.raw`
+.|...\....
+|.-.\.....
+.....|-...
+........|.
+..........
+.........\
+..../.\\..
+.-.-/..|..
+.|....-|.\
+..//.|....
+`
+
+up = [-1, 0]
+down = [1, 0]
+right = [0, 1]
+left = [0, -1]
+
+input = input.trim()
+
+grid = input.split('\n').map((x) => x.split(''))
+
+width = grid[0].length
+height = grid.length
+
+new_dir = (cur_dir, char) => {
+    if (char === '.') return [cur_dir]
+    else if (char === '\\') {
+        if (equality_hash(cur_dir) === equality_hash(down)) return [right]
+        if (equality_hash(cur_dir) === equality_hash(right)) return [down]
+        if (equality_hash(cur_dir) === equality_hash(left)) return [up]
+        if (equality_hash(cur_dir) === equality_hash(up)) return [left]
+    } else if (char === '/') {
+        if (equality_hash(cur_dir) === equality_hash(down)) return [left]
+        if (equality_hash(cur_dir) === equality_hash(right)) return [up]
+        if (equality_hash(cur_dir) === equality_hash(left)) return [down]
+        if (equality_hash(cur_dir) === equality_hash(up)) return [right]
+    } else if (char === '|') {
+        if (equality_hash(cur_dir) === equality_hash(down)) return [down]
+        if (equality_hash(cur_dir) === equality_hash(right)) return [up, down]
+        if (equality_hash(cur_dir) === equality_hash(left)) return [up, down]
+        if (equality_hash(cur_dir) === equality_hash(up)) return [up]
+    } else if (char === '-') {
+        if (equality_hash(cur_dir) === equality_hash(down)) return [left, right]
+        if (equality_hash(cur_dir) === equality_hash(right)) return [right]
+        if (equality_hash(cur_dir) === equality_hash(left)) return [left]
+        if (equality_hash(cur_dir) === equality_hash(up)) return [left, right]
+    }
+    throw new Error('bad')
+}
+
+solve = (init) => {
+    beams = [init]
+    seen = new Set()
+    energized = new Set()
+    while(true) {
+        let beam = beams.pop()
+        if (!beam) {
+            break
+        }
+
+        let [loc, dir] = beam
+
+        const next_loc = [loc[0] + dir[0], loc[1] + dir[1]]
+        let next_char = grid[next_loc[0]]?.[next_loc[1]]
+
+        if (!next_char) continue
+        let next_dirs = new_dir(dir, grid[next_loc[0]]?.[next_loc[1]])
+
+        for (let n_d of next_dirs) {
+            const nb = [next_loc, n_d]
+
+            if (seen.has(equality_hash(nb))) {
+                continue
+            }
+            energized.add(equality_hash(next_loc))
+            seen.add(equality_hash(nb))
+            beams.push(nb)
+        }
+    }
+
+    return energized.size
+}
+
+candidates = []
+for (let i = 0; i < height; i++) {
+    candidates.push([[i, -1], right])
+    candidates.push([[i, width], left])
+}
+for (let i = 0; i < width; i++) {
+    candidates.push([[-1, i], down])
+    candidates.push([[height, i], up])
+}
+
+ans = candidates.map((x) => solve(x))
+
+max = ans.reduce((acc, cur) => (acc > cur ? acc : cur))
+
+print(max)
