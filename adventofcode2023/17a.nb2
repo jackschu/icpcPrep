@@ -1,0 +1,117 @@
+notebook_version(2)
+
+input = `
+2413432311323
+3215453535623
+3255245654254
+3446585845452
+4546657867536
+1438598798454
+4457876987766
+3637877979653
+4654967986887
+4564679986453
+1224686865563
+2546548887735
+4322674655533
+`
+
+input = input.trim()
+
+grid = input.split('\n').map((row) =>
+    row
+        .split('')
+        .map((x) => Number(x))
+)
+
+
+up = [-1, 0]
+down = [1, 0]
+right = [0, 1]
+left = [0, -1]
+
+deltas = [up, down, right, left]
+
+get_reverse = (dir) => dir.map((x) => (Math.abs(x) === 0 ? 0 : -1 * x))
+
+get_neighbor_dirs = (cur) => {
+    const [h, w, depth, dir] = cur
+    if (depth === 0) return deltas
+    const rev = get_reverse(dir)
+    return deltas.filter((x) => equality_hash(x) !== equality_hash(rev))
+}
+
+let queue = []
+visited = new Map()
+let start = [0, 0, 0, right]
+queue.push([start, grid[0][0]])
+visited.set(equality_hash(start), [grid[0][0], null])
+while (queue.length) {
+    queue.sort( (a,b) => a[1] - b[1]) // poor mans priority queue
+    const [cur, prev_val] = queue.shift()
+    const next_dirs = get_neighbor_dirs(cur)
+    let next_locs = next_dirs.map((delta) => {
+        const cur_dir = cur[3]
+        const is_same_dir = equality_hash(cur_dir) === equality_hash(delta)
+        return [
+            cur[0] + delta[0],
+            cur[1] + delta[1],
+            is_same_dir ? cur[2] + 1 : 1,
+            delta,
+        ]
+    })
+
+    let filtered_next_locs = next_locs
+        .filter((loc) => !visited.has(equality_hash(loc)))
+        .filter((loc) => grid[loc[0]]?.[loc[1]] !== undefined)
+        .filter((loc) => loc[2] < 4)
+
+    filtered_next_locs.forEach((loc) => {
+        const loss = grid[loc[0]][loc[1]]
+        const next_loss = prev_val + loss
+        visited.set(equality_hash(loc), [next_loss,cur])
+        queue.push([loc, next_loss])
+    })
+}
+
+height = grid.length
+width = grid[0].length
+
+get_min = (h, w) => {
+    let out = 1_000_000
+    let out2 = null
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j <= 4; j++) {
+            const key = equality_hash([h, w, j, deltas[i]])
+            const val = visited.get(key)
+            if (val === undefined) continue
+            const [candidate, dir] =val
+            if(candidate< out) {
+                out = candidate
+                out2 = dir
+            }
+            
+        }
+    }
+    return [out, out2]
+}
+
+[dist, prev] = get_min(height-1, width-1)
+path = []
+for(let i = 0; i< 1000; i ++){
+    path.push(prev)
+    prev = visited.get(equality_hash(prev))?.[1]
+    if(!prev) break
+}
+optimal = new Set(path.map(x => equality_hash([x[0],x[1]])))
+print(ans = dist - grid[0][0])
+
+
+// render path
+for(let h= 0; h < height; h++){
+    let temp = []
+    for (let w = 0; w < width; w++){
+        temp.push( optimal.has(equality_hash([h,w])) ? "*" : grid[h][w].toString())
+    }
+    print(temp)
+}
