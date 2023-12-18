@@ -1,0 +1,111 @@
+notebook_version(2)
+
+input = `
+R 6 (#70c710)
+D 5 (#0dc571)
+L 2 (#5713f0)
+D 2 (#d2c081)
+R 2 (#59c680)
+D 2 (#411b91)
+L 5 (#8ceee2)
+U 2 (#caa173)
+L 1 (#1b58a2)
+U 2 (#caa171)
+R 2 (#7807d2)
+U 3 (#a77fa3)
+L 2 (#015232)
+U 2 (#7a21e3)
+`
+
+
+input = input.trim()
+
+num_to_dir = ['R', 'D', 'L', 'U']
+
+//part 1
+rows = input
+    .split('\n')
+    .map((x) => x.split(' ').slice(0, 2))
+    .map((x) => [x[0], Number(x[1])])
+
+//part 2
+rows = input
+    .split('\n')
+    .map((x) => x.split(' ')[2].slice(2, 8))
+    .map((x) => [num_to_dir[parseInt(x[5])], parseInt(x.slice(0, 5), 16)])
+
+print(rows)
+
+offset_count = (dir, cur, count) => {
+    let delta
+    if (dir === 'R') delta = [0, count]
+    else if (dir === 'L') delta = [0, -count]
+    else if (dir === 'U') delta = [-count, 0]
+    else if (dir === 'D') delta = [count, 0]
+    return [cur[0] + delta[0], cur[1] + delta[1]]
+}
+
+h_bars = new Map()
+bars = []
+targets = new Set()
+let cur = [0, 0]
+rows.map((row, idx) => {
+    const start = [...cur]
+    const [dir, count] = row
+    cur = offset_count(dir, cur, count)
+    if (dir === 'L' || dir === 'R') {
+        const lower = start[1] > cur[1] ? cur[1] : start[1]
+        const higher = start[1] < cur[1] ? cur[1] : start[1]
+        const prev = rows.at(idx - 1)[0]
+        const next = rows.at(idx + 1)[0]
+        h_bars.set(
+            equality_hash([start[0], lower, higher]),
+            prev === next ? 'continue' : 'flip'
+        )
+        targets.add(start[0])
+    } else {
+        const lower = start[0] > cur[0] ? cur[0] : start[0]
+        const higher = start[0] < cur[0] ? cur[0] : start[0]
+        bars.push([start[1], lower, higher])
+    }
+})
+targets = [...targets].sort((a, b) => a - b)
+print(cur)
+
+depth_targets = []
+targets.reduce((prev, cur) => {
+    depth_targets.push([cur, 1])
+    if (prev < cur - 1) depth_targets.push([cur - 1, cur - 1 - prev])
+    return cur
+}, targets[0])
+depth_targets.sort((a, b) => a[0] - b[0])
+
+ans = depth_targets.map((cur_targ) => {
+    const [height, depth] = cur_targ
+    const cur_bars = bars
+        .filter((bar) => bar[1] <= height && bar[2] >= height)
+        .map((x) => x[0])
+        .sort((a, b) => a - b)
+    let out = cur_bars.length
+
+    let is_inside = false
+    for (let i = 0; i < cur_bars.length; i++) {
+        const cur_bar = cur_bars[i]
+        const next_bar = cur_bars[i + 1]
+        const prev_bar = cur_bars[i - 1]
+
+        const is_match = h_bars.get(equality_hash([height, cur_bar, next_bar]))
+
+        if (is_inside && i != 0) {
+            out += Math.max(cur_bar - prev_bar - 1, 0)
+        }
+        if (is_match !== undefined) {
+            out += Math.max(next_bar - cur_bar - 1, 0)
+            i++
+        }
+        if (is_match !== 'flip') is_inside = !is_inside
+    }
+    return depth * out
+})
+
+print(ans.reduce((a, b) => a + b))
