@@ -1,0 +1,100 @@
+notebook_version(2)
+
+input = `
+    px{a<2006:qkq,m>2090:A,rfg}
+    pv{a>1716:R,A}
+    lnx{m>1548:A,A}
+    rfg{s<537:gd,x>2440:R,A}
+    qs{s>3448:A,lnx}
+    qkq{x<1416:A,crn}
+    crn{x>2662:A,R}
+    in{s<1351:px,qqz}
+    qqz{s>2770:qs,m<1801:hdj,R}
+    gd{a>3333:R,R}
+    hdj{m>838:A,pv}
+
+    {x=787,m=2655,a=1222,s=2876}
+    {x=1679,m=44,a=2067,s=496}
+    {x=2036,m=264,a=79,s=2244}
+    {x=2461,m=1339,a=466,s=291}
+    {x=2127,m=1623,a=2188,s=1013}
+`
+
+input = input.trim()
+;[input_rules, items] = input.split('\n\n')
+
+items = items
+    .split('\n')
+    .map((item) =>
+        item
+            .trim()
+            .replaceAll('=', '":')
+            .replaceAll(',', ',"')
+            .replaceAll('{', '{"')
+    )
+    .map((x) => JSON.parse(x))
+
+rules = new Map()
+input_rules
+    .split('\n')
+    .map((rule) => rule.trim().split('{'))
+    .forEach((rule) => {
+        const [key, rest] = rule
+        const out = {}
+        const frags = rest.slice(0, -1).split(',')
+
+        out['final'] = frags.splice(-1)[0]
+        const regex = new RegExp(
+            /(?<category>[xmas])(?<direction>.)(?<value>\d+)\:(?<destination>[A-z]+)/g
+        )
+
+        out['sub_rules'] = frags
+            .map((frag) => regex.exec(frags).groups)
+            .map((x) => ({
+                ...x,
+                is_greater_than: x.direction === '>',
+                value: Number(x.value),
+            }))
+        rules.set(key, out)
+    })
+
+sub_rule_matches = (rule, value) => {
+    const key = rule.category
+    const val = value[key]
+    if(rule.is_greater_than) {
+        return val > rule.value
+    } else {
+        return val < rule.value
+    }
+}
+
+
+rule_result = (rule, value) => {
+    for(let sub_rule of rule.sub_rules) {
+        if(sub_rule_matches(sub_rule, value)) {
+            return sub_rule.destination
+        }
+    }
+    return rule.final
+}
+
+score_value  = (value) => {
+    return value.x + value.m + value.a + value.s
+}
+
+scores = items.map(item => {
+    let cur_rule = rules.get("in")
+    let out = "R"
+    for(let i = 0; i < 1_000; i++){
+        if(!cur_rule) break;
+        const next_rule_name = rule_result(cur_rule, item)
+        out = next_rule_name
+        cur_rule = rules.get(next_rule_name)
+    }
+    if(out === "A") {
+        return score_value(item)
+    }
+    return 0
+})
+
+print(scores.reduce((a,b)=> a+b))
