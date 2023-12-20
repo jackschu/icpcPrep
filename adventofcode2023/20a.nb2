@@ -1,0 +1,95 @@
+notebook_version(2)
+
+input = `
+broadcaster -> a, b, c
+%a -> b
+%b -> c
+%c -> inv
+&inv -> a
+`
+
+input = input.trim()
+
+dest_to_src = new Map()
+modules = new Map()
+input = input.split('\n').map((row) => {
+    let [key, vals] = row.split(' -> ')
+    vals = vals.split(',').map((x) => x.trim())
+
+    let resolved_key
+    let kind
+    if (key[0] === '&') {
+        kind = 'conjunction'
+        resolved_key = key.slice(1)
+    } else if (key[0] === '%') {
+        kind = 'flip'
+        resolved_key = key.slice(1)
+    } else {
+        kind = 'none'
+        resolved_key = key
+    }
+    vals.forEach((dest) => {
+        const temp = dest_to_src.get(dest) ?? []
+        temp.push(resolved_key)
+        dest_to_src.set(dest, temp)
+    })
+    modules.set(resolved_key, {
+        kind,
+        dest: vals,
+    })
+})
+
+
+sim_pulse = (pulse_ct) => {
+    queue = [['button', 'broadcaster', false]]
+    while (queue.length) {
+        const [src, dest, is_high] = queue.shift()
+        // print( src, ` -${is_high ? "high" : "low"}->`, dest)
+        if (is_high) {
+            high_ct++
+        } else {
+            low_ct++
+        }
+
+        const cur_mod = modules.get(dest)
+        if (cur_mod === undefined) continue
+        const cur_mem = memory.get(dest)
+        let is_send_high = null
+        if (cur_mod.kind === 'flip') {
+            if (is_high) continue
+            if (typeof cur_mem !== 'boolean') throw new Error('bad')
+            memory.set(dest, !cur_mem)
+            is_send_high = !cur_mem
+        } else if (cur_mod.kind === 'conjunction') {
+            cur_mem.set(src, is_high)
+            is_send_high = ![...cur_mem.values()].every((x) => x)
+        } else {
+            is_send_high = is_high
+        }
+        cur_mod.dest.forEach((next_dest) => {
+            queue.push([dest, next_dest, is_send_high])
+        })
+    }
+}
+
+
+
+low_ct = 0
+high_ct = 0
+memory = new Map()
+modules.forEach((value, key) => {
+    if (value.kind === 'flip') {
+        memory.set(key, false)
+    } else if (value.kind === 'conjunction') {
+        const temp = new Map()
+        dest_to_src.get(key).forEach((src) => {
+            temp.set(src, false)
+        })
+        memory.set(key, temp)
+    }
+})
+for (let i = 0; i < 1000; i++) {
+    sim_pulse(i)
+}
+
+print(high_ct*low_ct)
