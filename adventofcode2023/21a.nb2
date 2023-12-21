@@ -1,0 +1,61 @@
+notebook_version(2)
+
+input = `
+...........
+.....###.#.
+.###.##..#.
+..#.#...#..
+....#.#....
+.##..S####.
+.##..#...#.
+.......##..
+.##.#.####.
+.##..##.##.
+...........
+`
+
+input = input.trim()
+
+grid = input.split('\n').map((x) => x.split(''))
+
+deltas = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+]
+
+start = null
+grid.forEach((row, row_idx) =>
+    row.forEach((elem, col_idx) => {
+        if (elem === 'S') {
+            start = [row_idx, col_idx]
+        }
+    })
+)
+
+seen = new Set()
+even_ct = 1
+queue = []
+max_depth = 6
+seen.add(equality_hash([start, true]))
+queue.push([start, true, 0])
+while (queue.length) {
+    let [cur, cur_is_even, cur_depth] = queue.shift()
+    if (cur_depth >= max_depth) continue
+
+    deltas.forEach((delta) => {
+        let next = [cur[0] + delta[0], cur[1] + delta[1]]
+        let next_is_even = !cur_is_even
+        let next_elem = grid[next[0]]?.[next[1]]
+        if (next_elem !== '.') return
+        let to_push = [next, next_is_even]
+        const hash = equality_hash(to_push)
+        if (seen.has(hash)) return
+        if (next_is_even) even_ct++
+        seen.add(hash)
+        queue.push([...to_push, cur_depth + 1])
+    })
+}
+
+print(even_ct)
