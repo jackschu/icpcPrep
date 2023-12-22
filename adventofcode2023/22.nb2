@@ -1,0 +1,119 @@
+notebook_version(2)
+
+input = `
+1,0,1~1,2,1
+0,0,2~2,0,2
+0,2,3~2,2,3
+0,0,4~0,2,4
+2,0,5~2,2,5
+0,1,6~2,1,6
+1,1,8~1,1,9
+`
+
+input = input.trim()
+
+bricks = input
+    .split('\n')
+    .map((x, idx) =>
+        x
+            .split('~')
+            .map((x) => x.split(',').map(Number))
+            .concat(idx)
+    )
+    .sort((a, b) => a[0][2] - b[0][2])
+
+ranges_overlap = (a0, a1, b0, b1) => {
+    let out =
+        (a0 >= b0 && a0 <= b1) ||
+        (a1 >= b0 && a1 <= b1) ||
+        (b0 >= a0 && b0 <= a1) ||
+        (b1 >= a0 && b1 <= a1)
+    return out
+}
+
+would_collide = (a, b) => {
+    return (
+        ranges_overlap(a[0][0], a[1][0], b[0][0], b[1][0]) &&
+        ranges_overlap(a[0][1], a[1][1], b[0][1], b[1][1])
+    )
+}
+
+same_brick_but_lower = (b, delta) => {
+    let out = [
+        [b[0][0], b[0][1], b[0][2] - delta],
+        [b[1][0], b[1][1], b[1][2] - delta],
+        b[2],
+    ]
+    return out
+}
+
+supported_by = new Map()
+const supporting = new Map()
+const stabilized_bricks = []
+for (let i = 0; i < bricks.length; i++) {
+    // could do a smarter sort on insert here
+    stabilized_bricks.sort((a, b) => a[1][2] - b[1][2]) 
+    const higher = bricks[i]
+    let broken = false
+    let rest = null
+    for (let j = stabilized_bricks.length - 1; j >= 0; j--) {
+        const lower = stabilized_bricks[j]
+        const l_top = lower[1][2]
+        if (rest !== null && l_top < rest) {
+            break
+        }
+        if (would_collide(lower, higher)) {
+            const h_bot = higher[0][2]
+
+            if (h_bot <= l_top) throw new Error('bad')
+            const delta = h_bot - l_top - 1
+
+            const below = supported_by.get(higher[2]) ?? new Set()
+            below.add(lower[2])
+            supported_by.set(higher[2], below)
+
+            const above = supporting.get(lower[2]) ?? new Set()
+            above.add(higher[2])
+            supporting.set(lower[2], above)
+
+            stabilized_bricks.push(same_brick_but_lower(higher, delta))
+            broken = true
+            rest = l_top
+        }
+    }
+    if (!broken) {
+        stabilized_bricks.push(same_brick_but_lower(higher, higher[0][2] - 1))
+    }
+}
+solve = (remove) => {
+    let out = 0
+    const temp_by = new Map()
+    supported_by.forEach((value, key) => temp_by.set(key, new Set(value)))
+    const starts = [remove]
+    for (let i = 0; i < bricks.length; i++) {
+        if (starts.length === 0) break
+        let cur = starts.pop()
+        let cur_deps = supporting.get(cur)
+        if (cur_deps === undefined) continue
+        for (let dep of cur_deps) {
+            let found = temp_by.get(dep)
+            found.delete(cur)
+            if (found.size === 0) {
+                starts.push(dep)
+                out++
+            }
+        }
+    }
+    return out
+}
+counts = new Array(bricks.length).fill(0).map((x, idx) => solve(idx))
+
+structural = new Set()
+supported_by.forEach((value) => {
+    if (value.size !== 1) return
+    structural.add(value.values().next().value)
+})
+
+print('part 1: ', bricks.length - structural.size)
+
+print('part 2: ', counts.reduce((a, b) => a + b))
