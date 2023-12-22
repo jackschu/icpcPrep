@@ -1,0 +1,122 @@
+notebook_version(2)
+
+
+input = `
+.......
+.......
+.......
+...S...
+.......
+.......
+.......
+`
+
+steps = 26501365
+
+
+input = input.trim()
+
+grid = input.split('\n').map((x) => x.split(''))
+
+height = grid.length
+
+get_fulls = (n) => {
+    const total = 1 + (4 * n * (n - 1)) / 2
+    const half = Math.floor((n - 1) / 2)
+    const odds = 1 + 4 * half * (half + 1)
+    const evens = total - odds
+    return [evens, odds]
+}
+
+fulls_size = (h, s) => Math.floor((s - (h - 1) / 2) / h)
+
+deltas = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+]
+
+start = null
+grid.forEach((row, row_idx) =>
+    row.forEach((elem, col_idx) => {
+        if (elem === 'S') {
+            start = [row_idx, col_idx]
+        }
+    })
+)
+
+solve = (starting, max_depth, start_depth) => {
+    const seen = new Set()
+    let even_ct = 0
+    let odd_ct = 0
+    const queue = []
+    is_evens = (max_depth - start_depth) % 2 == 0
+    starting.forEach((start) => {
+        start_even = true
+        if (start_even) {
+            even_ct++
+        } else {
+            odd_ct++
+        }
+        seen.add(equality_hash([start, start_even]))
+        queue.push([start, start_even, start_depth])
+    })
+    while (queue.length) {
+        let [cur, cur_is_even, cur_depth] = queue.shift()
+        if (cur_depth >= max_depth) continue
+
+        deltas.forEach((delta) => {
+            let next = [cur[0] + delta[0], cur[1] + delta[1]]
+            let next_is_even = !cur_is_even
+            let next_elem = grid[next[0]]?.[next[1]]
+            if (next_elem === undefined || next_elem === '#') return
+            let to_push = [next, next_is_even]
+            const hash = equality_hash(to_push)
+            if (seen.has(hash)) return
+            if (!next_is_even) odd_ct++
+            else even_ct++
+            seen.add(hash)
+            queue.push([...to_push, cur_depth + 1])
+        })
+    }
+    return is_evens ? even_ct : odd_ct
+}
+
+enter_even_wt = solve([start], steps, 1)
+enter_odd_wt = solve([start], steps, 0)
+
+const full = height - 1
+const mid = Math.floor(height / 2)
+const bottom = [full, mid]
+const top = [0, mid]
+const left = [mid, 0]
+const right = [mid, full]
+walls = [bottom, left, top, right]
+corners = [
+    [full, 0],
+    [0, 0],
+    [0, full],
+    [full, full],
+]
+
+diamond_offset = (size) => {
+    const edge_len = size - 2
+    const depth = height * (size - 2) + (height - 1) / 2 + 1
+    let out = 0
+    for (let i = 0; i < 4; i++) {
+        let head = solve([walls[i]], steps, depth)
+        out += head
+        let side = solve([corners[i]], steps, depth - (height - 1) / 2)
+        out += side * edge_len
+    }
+    return out
+}
+
+let out = 0
+const full_ring = fulls_size(height, steps)
+const fulls = get_fulls(full_ring)
+out += fulls[0] * enter_even_wt + fulls[1] * enter_odd_wt
+out += diamond_offset(full_ring + 1)
+out += diamond_offset(full_ring + 2)
+print(out)
