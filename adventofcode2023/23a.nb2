@@ -1,0 +1,127 @@
+notebook_version(2)
+
+input = `
+#.#####################
+#.......#########...###
+#######.#########.#.###
+###.....#.>.>.###.#.###
+###v#####.#v#.###.#.###
+###.>...#.#.#.....#...#
+###v###.#.#.#########.#
+###...#.#.#.......#...#
+#####.#.#.#######.#.###
+#.....#.#.#.......#...#
+#.#####.#.#.#########v#
+#.#...#...#...###...>.#
+#.#.#v#######v###.###v#
+#...#.>.#...>.>.#.###.#
+#####v#.#.###v#.#.###.#
+#.....#...#...#.#.#...#
+#.#########.###.#.#.###
+#...###...#...#...#.###
+###.###.#.###v#####v###
+#...#...#.#.>.>.#.>.###
+#.###.###.#.###.#.#v###
+#.....###...###...#...#
+#####################.#
+`
+
+input = input.trim()
+
+grid = input.split("\n").map(row => row.split(""))
+
+n = grid.length
+
+left = [0,-1]
+right = [0,1]
+up = [-1,0]
+down = [1,0]
+
+deltas = [
+    left,
+    right,
+    up,
+    down
+]
+
+start = [0, grid[0].findIndex(x => x === ".")]
+end = [n-1, grid[n-1].findIndex(x => x === ".")]
+
+steep_map = new Map()
+steep_map.set(">",right)
+steep_map.set("<",left)
+steep_map.set("v",down)
+steep_map.set("^",up)
+
+nexus = [start, end]
+for(let i =0; i <n; i++) {
+    for(let j = 0; j < n; j++) {
+        const cur = grid[i][j]
+        if (cur !== ".") continue
+        let arrow_ct = 0
+        let dot_ct = 0
+        deltas.forEach(delta => {
+            let cur = grid[i + delta[0]]?.[j + delta[1]]
+            if(cur === undefined) return
+            if (cur === ".") dot_ct++
+            else if(cur !== "#") arrow_ct++
+        })
+        if(arrow_ct >= 3) nexus.push([i,j])
+        if(dot_ct > 2) print("bad")
+        if(arrow_ct === 2) print("bad")
+    }
+}
+
+
+nexus_map = new Map()
+nexus.forEach((coord,idx) => nexus_map.set(equality_hash(coord), idx))
+
+
+
+dfs_to_nexus = (nexus_idx) => {
+    const seen = new Set()
+    const start = nexus[nexus_idx]
+    const stack = [[start, 0]]
+    seen.add(equality_hash(start))
+    while (stack.length){
+        const temp = stack.pop()
+        const [cur, cur_depth] = temp
+        const cur_val = grid[cur[0]][cur[1]]
+        const arrow_deltas = steep_map.get(cur_val)
+        let cur_deltas = arrow_deltas ? [arrow_deltas] : deltas
+        cur_deltas.forEach(delta => {
+            const next = [cur[0] + delta[0], cur[1] + delta[1]]
+            if(seen.has(equality_hash(next))) return
+            const next_val = grid[next[0]]?.[next[1]]
+            if(next_val === undefined || next_val === "#") return
+            const found = nexus_map.get(equality_hash(next))
+            seen.add(equality_hash(next))
+            if(found !== undefined) {
+                const existing = reduced_map.get(found) ?? []
+                existing.push([nexus_idx, cur_depth +1])
+                reduced_map.set(found, existing)
+                return
+            }
+            
+            stack.push([next,cur_depth +1])
+            
+        })
+        
+    }
+}
+
+reduced_map = new Map()
+for(let i = 0; i < nexus.length;i++) {
+    dfs_to_nexus(i)
+}
+
+backtrack = (cur) => {
+    if(cur === 0) return 0
+    const found = reduced_map.get(cur)
+    if(found === undefined) throw new Error("bad")
+    const vals = found.map(x => backtrack(x[0]) + x[1])
+    let out =  Math.max(...vals)
+    return out
+}
+
+print(backtrack(1))
