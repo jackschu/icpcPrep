@@ -1,0 +1,104 @@
+notebook_version(2)
+
+input = `
+19, 13, 30 @ -2,  1, -2
+18, 19, 22 @ -1, -1, -2
+20, 25, 34 @ -2, -2, -4
+12, 31, 28 @ -1, -2, -1
+20, 19, 15 @  1, -5, -3
+`
+
+input = input.trim()
+
+rows = input.split('\n').map((r) => {
+    let split = r
+        .split('@')
+        .flatMap((x) => x.split(','))
+        .map((x) => Number(x.trim()))
+    return [
+        [split[0], split[3]],
+        [split[1], split[4]],
+        [split[2], split[5]],
+    ]
+})
+
+const vec_to_rock = (rv_x, rv_y, rv_z, r0, r1) => {
+    let [[x_1, v_x1], [y_1, v_y1], [z_1, v_z1]] = r0
+    let [[x_2, v_x2], [y_2, v_y2]] = r1
+    const div =
+        (-v_y2 + v_y1) * rv_x + v_x1 * (v_y2 - rv_y) + v_x2 * (-v_y1 + rv_y)
+    if (div == 0) return null
+    let top =
+        v_x2 * (-y_2 + y_1) -
+        x_1 * v_y2 +
+        y_2 * rv_x -
+        y_1 * rv_x +
+        x_2 * (v_y2 - rv_y) +
+        x_1 * rv_y
+    let t = top / div
+    const i_x = x_1 + v_x1 * t - t * rv_x
+    const i_y = y_1 + v_y1 * t - t * rv_y
+    const i_z = z_1 + v_z1 * t - t * rv_z
+    return [
+        [i_x, rv_x],
+        [i_y, rv_y],
+        [i_z, rv_z],
+    ]
+}
+const solve_collide_part = (first, second) => {
+    const dv = first[1] - second[1]
+    const dp = first[0] - second[0]
+    if (dv == 0) {
+        if (dp == 0) return true
+        return null
+    }
+    return -dp / dv
+}
+const solve_collide = (first, second) => {
+    const mapped = first
+        .map((x, idx) => solve_collide_part(x, second[idx]))
+        .filter((x) => x !== true)
+        .map((x) => Math.round(x))
+    if (mapped.some((x) => x < 0)) return false
+    if (mapped.length === 0) return true
+    const start = mapped[0]
+    for (let i = 1; i < mapped.length; i++)
+        if (mapped[i] !== start) return false
+    return true
+}
+const range = 10 // ~300 for prod
+let found = null
+const r0 = rows[0]
+const r1 = rows[1]
+const r2 = rows[2]
+const row_copy = [...rows]
+let ct = 0
+for (let gy = -range; gy < range && !found; gy++) {
+    for (let gx = -range; gx < range && !found; gx++) {
+        for (let gz = -range; gz < range && !found; gz++) {
+            ct++
+            if (ct % 1_0000 === 0) internal.console.log(ct / (range * 2) ** 3)
+            let rock = null
+            for (let i = 0; i < row_copy.length - 1 && rock === null; i++) {
+                rock = vec_to_rock(gx, gy, gz, row_copy[i], row_copy[i + 1])
+            }
+            rock = rock.map((x) => x.map((x) => Math.round(x)))
+            if (rock === null) {
+                throw new Error('bad')
+            }
+            let breaking = false
+            for (row of rows) {
+                if (!solve_collide(rock, row)) {
+                    breaking = true
+                    break
+                }
+            }
+            if (breaking) continue
+            print(rock)
+            found = rock
+        }
+    }
+}
+ans = found
+
+print(ans.reduce((acc, cur)=> acc+cur[0],0))
