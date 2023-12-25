@@ -1,0 +1,101 @@
+notebook_version(2)
+
+input = `
+jqt: rhn xhk nvd
+rsh: frs pzl lsr
+xhk: hfx
+cmg: qnr nvd lhk bvb
+rhn: xhk bvb hfx
+bvb: xhk hfx
+pzl: lsr hfx nvd
+qnr: nvd
+ntq: jqt hfx bvb xhk
+nvd: lhk
+lsr: lhk
+rzs: qnr cmg lsr rsh
+frs: qnr lhk lsr
+`
+
+input = input.trim()
+input = input
+    .split('\n')
+    .map((x) => x.split(': '))
+    .map((x) => [x[0], ...x[1].split(' ')])
+
+edges = new Map()
+const add = (s, d) => {
+    let found = edges.get(s) ?? []
+    found.push(d)
+    edges.set(s, found)
+}
+input.forEach((row) => {
+    const [first, ...rest] = row
+    rest.forEach((d) => {
+        add(first, d)
+        add(d, first)
+    })
+})
+
+get_seen = (s, t, blocklist) => {
+    const edge_copy = edges
+    const seen = new Map()
+    const queue = [s]
+    seen.set(s, null)
+    while (queue.length) {
+        const cur = queue.shift()
+        if (cur === t) break
+        const nexts = edge_copy.get(cur)
+        if (nexts === undefined) throw new Error('bad ' + cur)
+        nexts.forEach((next) => {
+            if (seen.has(next)) return
+            if (blocklist.has(equality_hash([next, cur].sort()))) return
+            seen.set(next, cur)
+            queue.push(next)
+        })
+    }
+    return seen
+}
+
+shortest_path = (s, t, blocklist) => {
+    let seen = get_seen(s, t, blocklist)
+
+    let out = []
+    let cur = t
+    for (let i = 0; i < 10000 && cur !== null; i++) {
+        out.push(cur)
+        cur = seen.get(cur)
+    }
+    return out
+}
+
+block_path = (path, blocked) =>
+    path.reduce((acc, cur) => {
+        blocked.add(equality_hash([acc, cur].sort()))
+        return cur
+    })
+
+get_sizes = (start, stop) => {
+    let blocked = new Set()
+    let path = shortest_path(start, stop, blocked)
+    for (let i = 0; i < 3; i++) {
+        path = shortest_path(start, stop, blocked)
+        block_path(path, blocked)
+    }
+    const out1 = get_seen(start, stop, blocked)
+    const out2 = get_seen(stop, start, blocked)
+
+    return [out1.size, out2.size]
+}
+
+const nodes = [...edges.keys()]
+let out = null
+for (let i = 0; i < nodes.length && out === null; i++) {
+    for (let j = i + 1; j < nodes.length && out === null; j++) {
+        const [a, b] = get_sizes(nodes[i], nodes[j])
+
+        if (a + b == nodes.length) {
+            out = [a, b]
+        }
+    }
+}
+print(out, out[0] * out[1])
