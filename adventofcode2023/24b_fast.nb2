@@ -1,0 +1,131 @@
+notebook_version(2)
+
+input = `
+19, 13, 30 @ -2,  1, -2
+18, 19, 22 @ -1, -1, -2
+20, 25, 34 @ -2, -2, -4
+12, 31, 28 @ -1, -2, -1
+20, 19, 15 @  1, -5, -3
+`
+
+input = input.trim()
+
+rows = input.split('\n').map((r) => {
+    let split = r
+        .split('@')
+        .flatMap((x) => x.split(','))
+        .map((x) => Number(x.trim()))
+    return [
+        [split[0], split[3]],
+        [split[1], split[4]],
+        [split[2], split[5]],
+    ]
+})
+
+cross = (a, b) => {
+    let out = [
+        a[1] * b[2] - a[2] * b[1],
+        -a[0] * b[2] + a[2] * b[0],
+        a[0] * b[1] - a[1] * b[0],
+    ]
+    return out
+}
+
+dot = (a, b) => {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+sub = (a, b) => {
+    return a.map((x, idx) => x - b[idx])
+}
+
+mult = (f, v) => {
+    let out = v.map((x) => x * f)
+    return out
+}
+
+lin = (a, b, c, d, e, f) => {
+    let o1 = mult(a, b)
+    let o2 = mult(c, d)
+    let o3 = mult(e, f)
+
+    let out = []
+    for (let i = 0; i < 3; i++) {
+        out.push(o1[i] + o2[i] + o3[i])
+    }
+
+    return out
+}
+
+vec_to_rock = (rv_x, rv_y, rv_z, r0, r1) => {
+    let [[x_1, v_x1], [y_1, v_y1], [z_1, v_z1]] = r0
+    let [[x_2, v_x2], [y_2, v_y2]] = r1
+    const div =
+        (-v_y2 + v_y1) * rv_x + v_x1 * (v_y2 - rv_y) + v_x2 * (-v_y1 + rv_y)
+    if (div === 0) return null
+    let t =
+        (v_x2 * (-y_2 + y_1) -
+            x_1 * v_y2 +
+            y_2 * rv_x -
+            y_1 * rv_x +
+            x_2 * (v_y2 - rv_y) +
+            x_1 * rv_y) /
+        div
+    const i_x = x_1 + v_x1 * t - t * rv_x
+    const i_y = y_1 + v_y1 * t - t * rv_y
+    const i_z = z_1 + v_z1 * t - t * rv_z
+    return [
+        [i_x, rv_x],
+        [i_y, rv_y],
+        [i_z, rv_z],
+    ]
+}
+
+find_plane = (p1, v1, p2, v2) => {
+    const p12 = sub(p1, p2)
+    const v12 = sub(v1, v2)
+    const vv = cross(v1, v2)
+    return [cross(p12, v12), dot(p12, vv)]
+}
+
+// inspired by https://www.reddit.com/r/adventofcode/comments/18pnycy/comment/kersplf/?utm_source=share&utm_medium=web2x&context=3
+find_rock = (p1, v1, p2, v2, p3, v3) => {
+    const [a, A] = find_plane(p1, v1, p2, v2)
+    const [b, B] = find_plane(p1, v1, p3, v3)
+    const [c, C] = find_plane(p2, v2, p3, v3)
+
+    let w = lin(A, cross(b, c), B, cross(c, a), C, cross(a, b))
+
+    const t = dot(a, cross(b, c))
+    w = [Math.round(w[0] / t), Math.round(w[1] / t), Math.round(w[2] / t)].map(
+        (x) => BigInt(x)
+    )
+
+    return vec_to_rock(
+        w[0],
+        w[1],
+        w[2],
+        rows[0].map((x) => x.map((x) => BigInt(x))),
+        rows[1].map((x) => x.map((x) => BigInt(x)))
+    )
+}
+
+transpose_row = (row) => {
+    return [
+        [row[0][0], row[1][0], row[2][0]],
+        [row[0][1], row[1][1], row[2][1]],
+    ]
+}
+
+targ = []
+
+targ = targ.concat(transpose_row(rows[0]))
+targ = targ.concat(transpose_row(rows[1]))
+targ = targ.concat(transpose_row(rows[2]))
+
+ans = find_rock(...targ)
+
+print(ans)
+
+
+print(ans.reduce((a, b) => a + b[0], BigInt(0)))
