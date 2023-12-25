@@ -1,0 +1,83 @@
+notebook_version(2)
+
+input = `
+19, 13, 30 @ -2,  1, -2
+18, 19, 22 @ -1, -1, -2
+20, 25, 34 @ -2, -2, -4
+12, 31, 28 @ -1, -2, -1
+20, 19, 15 @  1, -5, -3
+`
+
+input = input.trim()
+
+rows = input.split('\n').map((r) => {
+    let split = r
+        .split('@')
+        .flatMap((x) => x.split(','))
+        .map((x) => Number(x.trim()))
+    return [
+        [split[0], split[3]],
+        [split[1], split[4]],
+        [split[2], split[5]],
+    ]
+})
+
+solve_cross = (first, second) => {
+    let [[x1, vx1], [y1, vy1]] = first
+    let [[x2, vx2], [y2, vy2]] = second
+    // let div = vx2*vy1 - vx1 * vy2
+    let div = vx1 * vy2 - vx2 * vy1
+    if (div === 0) {
+        let temp = vx2
+        vx2 = vy2
+        vy2 = temp
+
+        temp = vx1
+        vx1 = vy1
+        vy1 = temp
+
+        temp = x1
+        x1 = y1
+        y1 = temp
+
+        temp = x2
+        x2 = y2
+        y2 = temp
+        div = vx1 * vy2 - vx2 * vy1
+    }
+
+    if (div === 0) return null
+    // const other = vx2*x2 - vx2*y1 - vx2*y2 + vy2*x1
+    const other =
+        vx1 * vx2 * y1 - vx1 * vx2 * y2 + vx1 * vy2 * x2 - vx2 * vy1 * x1
+    const x = other / div
+    const t = (x - x1) / vx1
+    const y = t * vy1 + y1
+
+    if (t < 0) return null
+    return [x, y]
+}
+
+in_range = (x) => {
+    const prod = false // XXX flip for prod
+    const min = prod ? 200000000000000 : 7
+    const max = prod ? 400000000000000 : 27
+
+    return x >= min && x <= max
+}
+
+ans = 0
+for (let i = 0; i < rows.length; i++) {
+    for (let j = i + 1; j < rows.length; j++) {
+        let solved = solve_cross(rows[i], rows[j])
+        if (solved !== null) {
+            solved = solve_cross(rows[j], rows[i])
+        }
+        if (solved === null) continue
+        if (!in_range(solved[0])) continue
+        if (!in_range(solved[1])) continue
+        ans++
+    }
+}
+
+print(ans)
